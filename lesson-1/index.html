@@ -5,6 +5,14 @@
         <title>Sparrow Photography</title>
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <style>
+            *
+            {
+                font-family: arial;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
             body
             {
                 margin: 0 auto;
@@ -79,8 +87,31 @@
 
             img
             {
+                display: block;
                 height: auto;
                 max-width: 100%;
+            }
+
+            #app
+            {
+                margin-top: 1em;
+            }
+
+            .photo .heading
+            {
+                font-size: 1.25em;
+                text-align: center;
+            }
+
+            .photo .price
+            {
+                margin-top: 0.25em;
+                text-align: center;
+            }
+
+            .hidden
+            {
+                display: none;
             }
         </style>
     </head>
@@ -99,7 +130,80 @@
         </footer>
 
         <script>
-            // Code goes here...
+
+            ////////////////////////////////
+            // Constants
+
+            let SHOP_ITEMS_ENDPOINT = "https://vanillajsacademy.com/api/photos.json";
+
+            ////////////////////////////////
+            // Variables
+
+            let photos = [];
+
+            ////////////////////////////////
+            // Functions
+
+            function buildPageSkeleton()
+            {
+                let app = document.querySelector("#app");
+                app.innerHTML = `
+                    <p class="hidden" data-notifier></p>
+                    <div id="photos"></div>
+                `;
+            }
+
+            function rebuildProductGrid()
+            {
+                let photoGallery = document.querySelector("#photos");
+                photoGallery.replaceChildren();
+
+                photos.forEach(
+                    function(photo)
+                    {
+                        let photoItem = `
+                            <div class="photo">
+                                <img src="${photo.url}" alt="${photo.description}">
+                                <div>
+                                    <p class="heading">${photo.name}</p>
+                                    <p class="price">$${photo.price}</p>
+                                </div>
+                            </div>
+                        `;
+                        photoGallery.innerHTML += photoItem;
+                    }
+                );
+            }
+
+            async function fetchAvailableProducts()
+            {
+                let result = await fetch(SHOP_ITEMS_ENDPOINT);
+                if(!result.ok)
+                {
+                    let notifier = document.querySelector("[data-notifier]");
+                    notifier.textContent = "Unable to reach the server. Please notify the site adminitrator.";
+                    notifier.classList.remove("hidden");
+                    return;
+                }
+
+                let data = await result.json();
+                photos = data;
+            }
+
+            async function main()
+            {
+                buildPageSkeleton();
+                await fetchAvailableProducts();
+                rebuildProductGrid();
+            }
+
+            ////////////////////////////////
+            // Script Entry Point
+
+            window.addEventListener(
+                "load",
+                e => { main(); }
+            );
         </script>
     </body>
 </html>
