@@ -1,31 +1,31 @@
-.page
+.page > .title
 {
-    margin-top: 1em;
+    margin-bottom: 1em;
 }
 
-.photo
+.product
 {
     text-decoration: none;
 }
 
-.photo .info
+.product .info
 {
     text-align: center;
     color: black;
 }
 
-.photo .title
+.product .title
 {
     margin-top: 0.5em;
     font-size: 1.5em;
 }
 
-.photo .price
+.product .price
 {
     margin-top: 0.25em;
 }
 
-.photo .description
+.product .description
 {
     margin-top: 1em;
 }

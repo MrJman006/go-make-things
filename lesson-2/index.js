@@ -1,79 +1,86 @@
 ////////////////////////////////
 // Constants
 
-let SHOP_ITEMS_ENDPOINT = "https://vanillajsacademy.com/api/photos.json";
+let PRODUCTS_ENDPOINT = "https://vanillajsacademy.com/api/photos.json";
 
 ////////////////////////////////
 // Variables
 
-let photos = [];
+let products = undefined;
 
 ////////////////////////////////
 // Functions
 
-function buildPageSkeleton()
+function buildProductGallery()
 {
-    let page = document.querySelector("[data-page]");
-    page.innerHTML = `
-        <p class="hidden" data-notifier></p>
-        <div class="content gallery" data-content></div>
-    `;
-}
+    let contentElement = document.querySelector("[data-content]");
+    contentElement.replaceChildren();
 
-function rebuildProductGrid()
-{
-    let content = document.querySelector("[data-content]");
-    content.replaceChildren();
+    //
+    // Ensure the server returned product data.
+    //
 
-    photos.forEach(
-        function(photo)
+    if(!products || !products.length)
+    {
+        contentElement.innerHTML = `
+            <p>There was a server communication error. Please check back later.</p>
+        `;
+        return;
+    }
+
+    //
+    // Ensure that products are available.
+    //
+
+    if(products.length == 0)
+    {
+        contentElement.innerHTML = `
+            <p>There are no photos available at this time. Please check back later.</p>
+        `;
+        return;
+    }
+
+    contentElement.classList.add("gallery");
+    products.forEach(
+        function(product)
         {
-            console.log(photo);
-            console.log(photo.id);
-            let photoItem = `
-                <a href="photo.html?id=${photo.id}" class="photo">
-                    <img src="${photo.url}" alt="${photo.description}">
+            let productElement = `
+                <a href="product.html?id=${encodeURIComponent(product.id)}" class="product">
+                    <img src="${product.url}" alt="${product.description}">
                     <div class="info">
-                        <p class="title">${photo.name}</p>
-                        <p class="price">$${photo.price}</p>
+                        <p class="title">${product.name}</p>
+                        <p class="price">$${product.price}</p>
                     </div>
                 </a>
             `;
-            content.innerHTML += photoItem;
+            contentElement.innerHTML += productElement;
         }
     );
 }
 
-async function fetchAvailableProducts()
+async function fetchProductData()
 {
-    let result = await fetch(SHOP_ITEMS_ENDPOINT);
-    if(!result.ok)
-    {
-        let notifier = document.querySelector("[data-notifier]");
-        notifier.textContent = "Unable to reach the server. Please notify the site adminitrator.";
-        notifier.classList.remove("hidden");
-        return;
-    }
-
     try
     {
-        let data = await result.json();
-        photos = data;
+        let result = await fetch(PRODUCTS_ENDPOINT);
+        if(!result.ok)
+        {
+            throw result;
+        }
+    
+        let json = await result.json();
+        products = json;
     }
-    catch(e)
+    catch(error)
     {
-        let notifier = document.querySelector("[data-notifier]");
-        notifier.textContent = "There was an error communicating with the server. Please notify the site adminitrator.";
-        notifier.classList.remove("hidden");
-        return;
+        console.warn(error);
     }
 }
 
 async function main()
 {
-    buildPageSkeleton();
-    await fetchAvailableProducts();
-    rebuildProductGrid();
+    await fetchProductData();
+    buildProductGallery();
 }
 
 ////////////////////////////////
