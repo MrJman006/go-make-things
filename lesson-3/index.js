@@ -1,32 +1,24 @@
 ////////////////////////////////
+// Imports
+import {fetchProductData} from "./api.js"
+
+////////////////////////////////
 // Constants
 
-let PRODUCTS_ENDPOINT = "https://vanillajsacademy.com/api/photos.json";
+// N/A
 
 ////////////////////////////////
 // Variables
 
-let products = undefined;
+// N/A
 
 ////////////////////////////////
 // Functions
 
-function buildProductGallery()
+function buildProductGallery(products)
 {
     let contentElement = document.querySelector("[data-content]");
     contentElement.replaceChildren();
-
-    //
-    // Ensure the server returned product data.
-    //
-
-    if(!products || !products.length)
-    {
-        contentElement.innerHTML = `
-            <p>There was a server communication error. Please check back later.</p>
-        `;
-        return;
-    }
 
     //
     // Ensure that products are available.
@@ -58,29 +50,10 @@ function buildProductGallery()
     );
 }
 
-async function fetchProductData()
-{
-    try
-    {
-        let result = await fetch(PRODUCTS_ENDPOINT);
-        if(!result.ok)
-        {
-            throw result;
-        }
-    
-        let json = await result.json();
-        products = json;
-    }
-    catch(error)
-    {
-        console.warn(error);
-    }
-}
-
 async function main()
 {
-    await fetchProductData();
-    buildProductGallery();
+    let products = await fetchProductData();
+    buildProductGallery(products);
 }
 
 ////////////////////////////////

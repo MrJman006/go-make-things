@@ -1,12 +1,17 @@
 ////////////////////////////////
+// Imports
+
+import {fetchProductData} from "./api.js"
+
+////////////////////////////////
 // Constants
 
-let PRODUCTS_ENDPOINT = "https://vanillajsacademy.com/api/photos.json";
+// N/A
 
 ////////////////////////////////
 // Variables
 
-let products = [];
+// N/A
 
 ////////////////////////////////
 // Functions
@@ -18,28 +23,16 @@ function getProductId()
     return id;
 }
 
-function getProductData(id)
+function getProductData(products, productId)
 {
-    let productData = products.find((p) => { return p.id == id; });
+    let productData = products.find((p) => { return p.id == productId; });
     return productData;
 }
 
-function buildProductContent()
+function buildProductContent(products)
 {
     let contentElement = document.querySelector("[data-content]");
     contentElement.replaceChildren();
-
-    //
-    // Ensure the server returned product data.
-    //
-
-    if(!products || !products.length)
-    {
-        contentElement.innerHTML = `
-            <p>There was a server communication error. Please check back later.</p>
-        `;
-        return;
-    }
 
     //
     // Ensure that products are available.
@@ -71,7 +64,7 @@ function buildProductContent()
     // Ensure the product exists.
     //
 
-    let productData = getProductData(productId);
+    let productData = getProductData(products, productId);
     if(!productData)
     {
         contentElement.innerHTML = `
@@ -101,29 +94,10 @@ function buildProductContent()
     contentElement.innerHTML += productElement;
 }
 
-async function fetchProductData()
-{
-    try
-    {
-        let result = await fetch(PRODUCTS_ENDPOINT);
-        if(!result.ok)
-        {
-            throw result;
-        }
-    
-        let json = await result.json();
-        products = json;
-    }
-    catch(error)
-    {
-        console.warn(error);
-    }
-}
-
 async function main()
 {
-    await fetchProductData();
-    buildProductContent();
+    let products = await fetchProductData();
+    buildProductContent(products);
 }
 
 ////////////////////////////////
