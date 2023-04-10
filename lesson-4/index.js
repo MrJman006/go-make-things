@@ -59,8 +59,5 @@ async function main()
 ////////////////////////////////
 // Script Entry Point
 
-window.addEventListener(
-    "load",
-    e => { main(); }
-);
+window.addEventListener("load", (e) => { main(); });
 

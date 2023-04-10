@@ -16,17 +16,31 @@
 
 .product .title
 {
-    margin-top: 0.5em;
-    font-size: 1.5em;
-}
-
-.product .price
-{
-    margin-top: 0.25em;
+    margin-top: 1em;
+    font-size: 20pt;
 }
 
 .product .description
 {
     margin-top: 1em;
+}
+
+.product .price
+{
+    font-size: 16pt;
+    margin-top: 2em;
+}
+
+.button
+{
+    margin-top: 1em;
+    display: inline-block;
+    line-height: 1.24;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    color: #ffffff;
+    background-color: #015db9;
 }
 
