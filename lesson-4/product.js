@@ -1,7 +1,7 @@
 ////////////////////////////////
 // Imports
 
-import {store, component} from "./reef.es.min.js"
+import {render} from "./reef.es.min.js"
 import {fetchProductData} from "./api.js"
 
 ////////////////////////////////
@@ -43,24 +43,23 @@ function buildErrorContentRedirectTemplate(message, reactiveData)
 
 function buildErrorContentWithRedirect(contentElement, message)
 {
-    let reactiveData = store({
-        remainingSec: 3
-    });
+    let remainingSec = 3;
 
     function templateGenerator()
     {
-        return `<p>${message} Redirecting to the product gallery in ${reactiveData.remainingSec} seconds.</p>`;
+        return `<p>${message} Redirecting to the product gallery in ${remainingSec} seconds.</p>`;
     };
 
-    component(contentElement, templateGenerator);
+    render(contentElement, templateGenerator());
 
     let interval;
     let intervalDelayMilliSec = 1000;
 
     function update()
     {
-        reactiveData.remainingSec -= 1;
-        if(reactiveData.remainingSec == 0 )
+        remainingSec -= 1;
+        render(contentElement, templateGenerator());
+        if(remainingSec == 0 )
         {
             clearInterval(interval);
             window.location.href = "/";
@@ -73,17 +72,28 @@ function buildErrorContentWithRedirect(contentElement, message)
 function buildErrorContent(contentElement, message)
 {
     let templateGenerator = () => { return `<p>There are no photos available at this time. Please check back later.</p>`; };
-    component(contentElement, templateGenerator);
+    render(contentElement, templateGenerator());
 }
 
-function buildProductContent(contentElement, productData)
+function buildProductContent(contentElement, productData, cart)
 {
     // Update the page title.
     document.title = `${productData.name} | ${document.title}`;
 
     function addToCartButtonTemplateGenerator()
     {
-        let template = `<a class="button" data-add-to-cart>Add To Cart</a>`;
+        let template;
+
+        let productIsInCart = cart.includes(productData.id);
+        if(productIsInCart)
+        {
+            template = `<p class="add-to-cart">This product is in your cart!</p>`;
+        }
+        else
+        {
+            template = `<a class="add-to-cart button" data-add-to-cart>Add To Cart</a>`;
+        }
+
         return template;
     }
 
@@ -103,10 +113,22 @@ function buildProductContent(contentElement, productData)
         return template;
     };
 
-    component(contentElement, templateGenerator);
+    render(contentElement, templateGenerator());
+
+    function onAddToCartClicked(e)
+    {
+        cart.push(productData.id);
+        render(contentElement, templateGenerator());
+    }
+
+    let addToCartButton = contentElement.querySelector("[data-add-to-cart]");
+    addToCartButton.addEventListener(
+        "click",
+        onAddToCartClicked
+    );
 }
 
-function buildContent(products)
+function buildContent(products, cart)
 {
     let contentElement = document.querySelector("[data-content]");
 
@@ -149,13 +171,14 @@ function buildContent(products)
     // Display the product.
     //
 
-    buildProductContent(contentElement, productData);
+    buildProductContent(contentElement, productData, cart);
 }
 
 async function main()
 {
     let products = await fetchProductData();
-    buildContent(products);
+    let cart = [];
+    buildContent(products, cart);
 }
 
 ////////////////////////////////
