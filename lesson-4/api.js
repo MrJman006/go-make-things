@@ -45,10 +45,27 @@ async function fetchProductData()
     return json;
 }
 
+function fetchCartData()
+{
+    //
+    // Fetch the cart data from local storage.
+    //
+
+    let json = Storage.local.getItem("cart");
+    if(json)
+    {
+        console.log("Found cart data.");
+        return json;
+    }
+
+    return [];
+}
+
 ////////////////////////////////
 // Exports
 
 export {
-    fetchProductData
+    fetchProductData,
+    fetchCartData
 };
 

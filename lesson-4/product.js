@@ -3,6 +3,8 @@
 
 import {render} from "./reef.es.min.js"
 import {fetchProductData} from "./api.js"
+import {fetchCartData} from "./api.js"
+import {Storage} from "./storage.js"
 
 ////////////////////////////////
 // Constants
@@ -118,11 +120,12 @@ function buildProductContent(contentElement, productData, cart)
     function onAddToCartClicked(e)
     {
         cart.push(productData.id);
+        Storage.local.setItem("cart", cart);
         render(contentElement, templateGenerator());
     }
 
     let addToCartButton = contentElement.querySelector("[data-add-to-cart]");
-    addToCartButton.addEventListener(
+    addToCartButton?.addEventListener(
         "click",
         onAddToCartClicked
     );
@@ -177,7 +180,7 @@ function buildContent(products, cart)
 async function main()
 {
     let products = await fetchProductData();
-    let cart = [];
+    let cart = fetchCartData();
     buildContent(products, cart);
 }
 
