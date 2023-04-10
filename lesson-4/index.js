@@ -37,12 +37,9 @@ function buildProductGallery(products)
         function(product)
         {
             let productElement = `
-                <a href="product.html?id=${encodeURIComponent(product.id)}" class="product">
-                    <img src="${product.url}" alt="${product.description}">
-                    <div class="info">
-                        <p class="title">${product.name}</p>
-                        <p class="price">$${product.price}</p>
-                    </div>
+                <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card">
+                    <img class="product-card__image" src="${product.url}" alt="${product.description}">
+                    <p class="product-card__title">${product.name}</p>
                 </a>
             `;
             contentElement.innerHTML += productElement;

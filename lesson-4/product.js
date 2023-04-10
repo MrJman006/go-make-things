@@ -89,11 +89,19 @@ function buildProductContent(contentElement, productData, cart)
         let productIsInCart = cart.includes(productData.id);
         if(productIsInCart)
         {
-            template = `<p class="add-to-cart">This product is in your cart!</p>`;
+            template = `
+                <div class="product-listing__cart-details">
+                    <p>This product is in your cart!</p>
+                </div>
+            `;
         }
         else
         {
-            template = `<a class="add-to-cart button" data-add-to-cart>Add To Cart</a>`;
+            template = `
+                <div class="product-listing__cart-details">
+                    <a class="button" data-add-to-cart>Add To Cart</a>
+                </div>
+            `;
         }
 
         return template;
@@ -102,14 +110,12 @@ function buildProductContent(contentElement, productData, cart)
     function templateGenerator()
     {
         let template = `
-            <div class="product">
-                <img src="${productData.url}" alt="${productData.description}">
-                <div class="info">
-                    <p class="title">${productData.name}</p>
-                    <p class="description">${productData.description}</p>
-                    <p class="price">$${productData.price}</p>
-                    ${addToCartButtonTemplateGenerator()}
-                </div>
+            <div class="product-listing">
+                <img class="product-listing__image" src="${productData.url}" alt="${productData.description}">
+                <p class="product-listing__title">${productData.name}</p>
+                <p class="product-listing__description">${productData.description}</p>
+                <p class="product-listing__price">$${productData.price}</p>
+                ${addToCartButtonTemplateGenerator()}
             </div>
         `;
         return template;

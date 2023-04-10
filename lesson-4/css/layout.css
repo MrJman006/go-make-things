@@ -1,6 +1,6 @@
-/**
- * Nav Menu
- */
+/*******************************
+* Navigation
+**/
 
 .nav
 {
@@ -18,9 +18,9 @@
     text-decoration: underline;
 }
 
-/**
- * Gallery
- */
+/*******************************
+* Gallery
+**/
 
 @media (min-width: 20em)
 {
@@ -49,4 +49,5 @@
         grid-template-columns: repeat(4, 1fr);
     }
 }
+
 
