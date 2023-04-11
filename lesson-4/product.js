@@ -1,10 +1,9 @@
 ////////////////////////////////
 // Imports
 
-import {render} from "./reef.es.min.js"
-import {fetchProductData} from "./api.js"
-import {fetchCartData} from "./api.js"
-import {Storage} from "./storage.js"
+import { ProductList } from "./product-list.js";
+import { Cart } from "./cart.js";
+import { render } from "./reef.es.min.js"
 
 ////////////////////////////////
 // Constants
@@ -77,16 +76,16 @@ function buildErrorContent(contentElement, message)
     render(contentElement, templateGenerator());
 }
 
-function buildProductContent(contentElement, productData, cart)
+function buildProductContent(contentElement, product, cart)
 {
     // Update the page title.
-    document.title = `${productData.name} | ${document.title}`;
+    document.title = `${product.name} | ${document.title}`;
 
-    function addToCartButtonTemplateGenerator()
+    function cartDetailsTemplateGenerator()
     {
         let template;
 
-        let productIsInCart = cart.includes(productData.id);
+        let productIsInCart = cart.has(product.id);
         if(productIsInCart)
         {
             template = `
@@ -111,11 +110,11 @@ function buildProductContent(contentElement, productData, cart)
     {
         let template = `
             <div class="product-listing">
-                <img class="product-listing__image" src="${productData.url}" alt="${productData.description}">
-                <p class="product-listing__title">${productData.name}</p>
-                <p class="product-listing__description">${productData.description}</p>
-                <p class="product-listing__price">$${productData.price}</p>
-                ${addToCartButtonTemplateGenerator()}
+                <img class="product-listing__image" src="${product.url}" alt="${product.description}">
+                <p class="product-listing__title">${product.name}</p>
+                <p class="product-listing__description">${product.description}</p>
+                <p class="product-listing__price">$${product.price}</p>
+                ${cartDetailsTemplateGenerator()}
             </div>
         `;
         return template;
@@ -125,8 +124,8 @@ function buildProductContent(contentElement, productData, cart)
 
     function onAddToCartClicked(e)
     {
-        cart.push(productData.id);
-        Storage.local.setItem("cart", cart);
+        cart.add(product.id);
+        cart.save();
         render(contentElement, templateGenerator());
     }
 
@@ -137,7 +136,7 @@ function buildProductContent(contentElement, productData, cart)
     );
 }
 
-function buildContent(products, cart)
+function buildContent(productList, cart)
 {
     let contentElement = document.querySelector("[data-content]");
 
@@ -145,7 +144,7 @@ function buildContent(products, cart)
     // Ensure that products are available.
     //
 
-    if(products.length == 0)
+    if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
         buildErrorContent(contentElement, message);
@@ -168,8 +167,8 @@ function buildContent(products, cart)
     // Ensure the product exists.
     //
 
-    let productData = getProductData(products, productId);
-    if(!productData)
+    let product = productList.get(productId);
+    if(!product)
     {
         let message = "The requested product could not be located.";
         buildErrorContentWithRedirect(contentElement, message);
@@ -180,14 +179,18 @@ function buildContent(products, cart)
     // Display the product.
     //
 
-    buildProductContent(contentElement, productData, cart);
+    buildProductContent(contentElement, product, cart);
 }
 
 async function main()
 {
-    let products = await fetchProductData();
-    let cart = fetchCartData();
-    buildContent(products, cart);
+    let productList = ProductList();
+    await productList.load();
+
+    let cart = Cart();
+    cart.load();
+
+    buildContent(productList, cart);
 }
 
 ////////////////////////////////

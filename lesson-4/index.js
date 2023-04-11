@@ -1,6 +1,7 @@
 ////////////////////////////////
 // Imports
-import {fetchProductData} from "./api.js"
+
+import { ProductList } from "./product-list.js";
 
 ////////////////////////////////
 // Constants
@@ -15,7 +16,7 @@ import {fetchProductData} from "./api.js"
 ////////////////////////////////
 // Functions
 
-function buildProductGallery(products)
+function buildProductGallery(productList)
 {
     let contentElement = document.querySelector("[data-content]");
     contentElement.replaceChildren();
@@ -24,7 +25,7 @@ function buildProductGallery(products)
     // Ensure that products are available.
     //
 
-    if(products.length == 0)
+    if(productList.length() == 0)
     {
         contentElement.innerHTML = `
             <p>There are no photos available at this time. Please check back later.</p>
@@ -32,25 +33,31 @@ function buildProductGallery(products)
         return;
     }
 
+    //
+    // Build product cards.
+    //    
+
     contentElement.classList.add("gallery");
-    products.forEach(
-        function(product)
-        {
-            let productElement = `
-                <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card">
-                    <img class="product-card__image" src="${product.url}" alt="${product.description}">
-                    <p class="product-card__title">${product.name}</p>
-                </a>
-            `;
-            contentElement.innerHTML += productElement;
-        }
-    );
+
+    function buildProductCard(product)
+    {
+        let productElement = `
+            <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card">
+                <img class="product-card__image" src="${product.url}" alt="${product.description}">
+                <p class="product-card__title">${product.name}</p>
+            </a>
+        `;
+        contentElement.innerHTML += productElement;
+    }
+
+    productList.forEach(buildProductCard);
 }
 
 async function main()
 {
-    let products = await fetchProductData();
-    buildProductGallery(products);
+    let productList = ProductList();
+    await productList.load();
+    buildProductGallery(productList);
 }
 
 ////////////////////////////////
