@@ -124,7 +124,6 @@ function buildProductContent(contentElement, product, cart)
     function onAddToCartClicked(e)
     {
         cart.addProduct(product.id);
-        cart.save();
         render(contentElement, templateGenerator());
     }
 

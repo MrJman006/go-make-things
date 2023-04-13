@@ -14,51 +14,25 @@ function Cart()
 
     function load()
     {
-        _cart = store(Storage.local.getItem(_CACHE_ID));
-        if(_cart)
-        {
-            console.log("Loading cart from the site cache.");
-            return;
-        }
-   
-        console.log("Creating a new cart."); 
-        _cart = store([]);
-        Storage.local.setItem(_CACHE_ID, _cart);
-        
-        return;
-    }
-    
-    function save()
-    {
-        console.log("Saving cart to the site cache.");
-        Storage.local.setItem(_CACHE_ID, _cart);
+        console.log("Loading cart from the site cache.");
+        _cart = store(Storage.local.getItem(_CACHE_ID) || []);
     }
     
     function addProduct(productId)
     {
-        console.log("Adding product to the cart.");
-        for(let id of _cart)
+        if(_cart.includes(productId))
         {
-            if(id == productId)
-            {
-                return;
-            }
+            return;
         }
-    
+
+        console.log("Adding product to the cart.");
         _cart.push(productId);
+        Storage.local.setItem(_CACHE_ID, _cart);
     }
     
     function hasProduct(productId)
     {
-        for(let id of _cart)
-        {
-            if(id == productId)
-            {
-                return true;
-            }
-        }
-    
-        return false;
+        return _cart.includes(productId);
     }
 
     function productCount()
@@ -68,7 +42,6 @@ function Cart()
 
     return {
         load,
-        save,
         addProduct,
         hasProduct,
         productCount
