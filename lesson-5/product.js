@@ -109,7 +109,7 @@ function buildProductContent(contentElement, product, cart)
     function templateGenerator()
     {
         let template = `
-            <div class="product-listing">
+            <div class="product-listing" aria-live="polite">
                 <img class="product-listing__image" src="${product.url}" alt="${product.description}">
                 <p class="product-listing__title">${product.name}</p>
                 <p class="product-listing__description">${product.description}</p>
