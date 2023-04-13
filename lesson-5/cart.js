@@ -33,7 +33,7 @@ function Cart()
         Storage.local.setItem(_CACHE_ID, _cart);
     }
     
-    function add(productId)
+    function addProduct(productId)
     {
         for(let id of _cart)
         {
@@ -46,7 +46,7 @@ function Cart()
         _cart.push(productId);
     }
     
-    function has(productId)
+    function hasProduct(productId)
     {
         for(let id of _cart)
         {
@@ -59,11 +59,17 @@ function Cart()
         return false;
     }
 
+    function productCount()
+    {
+        return _cart.length;
+    }
+
     return {
         load,
         save,
-        add,
-        has
+        addProduct,
+        hasProduct,
+        productCount
     };
 }
 

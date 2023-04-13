@@ -85,8 +85,7 @@ function buildProductContent(contentElement, product, cart)
     {
         let template;
 
-        let productIsInCart = cart.has(product.id);
-        if(productIsInCart)
+        if(cart.hasProduct(product.id))
         {
             template = `
                 <div class="product-listing__cart-details">
@@ -124,7 +123,7 @@ function buildProductContent(contentElement, product, cart)
 
     function onAddToCartClicked(e)
     {
-        cart.add(product.id);
+        cart.addProduct(product.id);
         cart.save();
         render(contentElement, templateGenerator());
     }
