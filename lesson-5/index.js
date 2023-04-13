@@ -2,6 +2,8 @@
 // Imports
 
 import { ProductList } from "./product-list.js";
+import { Cart } from "./cart.js";
+import { component } from "./reef.es.min.js";
 
 ////////////////////////////////
 // Constants
@@ -16,7 +18,7 @@ import { ProductList } from "./product-list.js";
 ////////////////////////////////
 // Functions
 
-function buildProductGallery(productList)
+function buildProductGallery(productList, cart)
 {
     let contentElement = document.querySelector("[data-content]");
     contentElement.replaceChildren();
@@ -53,11 +55,32 @@ function buildProductGallery(productList)
     productList.forEach(buildProductCard);
 }
 
+function buildCart(cart)
+{
+    function cartTemplateGenerator()
+    {
+        let productCount = cart.productCount();
+        let cartTemplate = `
+            <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
+        `;
+
+        return cartTemplate;
+    }
+
+    let cartElement = document.querySelector("[data-cart]");
+    component(cartElement, cartTemplateGenerator);
+}
+
 async function main()
 {
     let productList = ProductList();
     await productList.load();
-    buildProductGallery(productList);
+
+    let cart = Cart();
+    cart.load();
+
+    buildProductGallery(productList, cart);
+    buildCart(cart);
 }
 
 ////////////////////////////////

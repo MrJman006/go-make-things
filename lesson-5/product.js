@@ -3,7 +3,7 @@
 
 import { ProductList } from "./product-list.js";
 import { Cart } from "./cart.js";
-import { render } from "./reef.es.min.js"
+import { render, component } from "./reef.es.min.js"
 
 ////////////////////////////////
 // Constants
@@ -181,6 +181,22 @@ function buildContent(productList, cart)
     buildProductContent(contentElement, product, cart);
 }
 
+function buildCart(cart)
+{
+    function cartTemplateGenerator()
+    {
+        let productCount = cart.productCount();
+        let cartTemplate = `
+            <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
+        `;
+
+        return cartTemplate;
+    }
+
+    let cartElement = document.querySelector("[data-cart]");
+    component(cartElement, cartTemplateGenerator);
+}
+
 async function main()
 {
     let productList = ProductList();
@@ -190,6 +206,7 @@ async function main()
     cart.load();
 
     buildContent(productList, cart);
+    buildCart(cart);
 }
 
 ////////////////////////////////

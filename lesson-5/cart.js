@@ -2,6 +2,7 @@
 // Imports
 
 import { Storage } from "./storage.js"
+import { store } from "./reef.es.min.js"
 
 ////////////////////////////////
 // Cart API
@@ -13,7 +14,7 @@ function Cart()
 
     function load()
     {
-        _cart = Storage.local.getItem(_CACHE_ID);
+        _cart = store(Storage.local.getItem(_CACHE_ID));
         if(_cart)
         {
             console.log("Loading cart from the site cache.");
@@ -21,7 +22,7 @@ function Cart()
         }
    
         console.log("Creating a new cart."); 
-        _cart = [];
+        _cart = store([]);
         Storage.local.setItem(_CACHE_ID, _cart);
         
         return;
@@ -35,6 +36,7 @@ function Cart()
     
     function addProduct(productId)
     {
+        console.log("Adding product to the cart.");
         for(let id of _cart)
         {
             if(id == productId)
