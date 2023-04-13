@@ -2,7 +2,7 @@
 * Navigation
 **/
 
-.nav
+.nav-bar
 {
     padding: 1em 0;
     display: grid;
@@ -12,20 +12,15 @@
     grid-row-gap: 1em;
 }
 
-.nav-items
+.nav-bar__items
 {
     text-align: right;
 }
 
-.nav a
+.nav-bar__logo,
+.nav-bar__item,
 {
     text-decoration: none;
-}
-
-.nav a:focus,
-.nav a:hover
-{
-    text-decoration: underline;
 }
 
 /*******************************

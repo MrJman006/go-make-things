@@ -18,3 +18,8 @@ footer
     margin-top: 5em;
 }
 
+a
+{
+    text-decoration: none;
+}
+

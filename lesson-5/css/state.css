@@ -1,10 +1,28 @@
-.hidden
+/*******************************
+* Tags
+**/
+
+a:focus,
+a:hover
 {
-    display: none;
+    text-decoration: none;
 }
+
+/*******************************
+* Button
+**/
 
 .button:hover
 {
     background-color: #004182;
+}
+
+/*******************************
+* Transient State
+**/
+
+.hidden
+{
+    display: none;
 }
 
