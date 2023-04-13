@@ -5,6 +5,16 @@
 .nav
 {
     padding: 1em 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 1fr;
+    grid-column-gap: 0;
+    grid-row-gap: 1em;
+}
+
+.nav-items
+{
+    text-align: right;
 }
 
 .nav a
