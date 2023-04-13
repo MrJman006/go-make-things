@@ -2,13 +2,11 @@
 
 echo "$@" | grep -Pq "(^|\s+)(-s|--help)(\s+|$)"
 
-if [ $? -eq 0 ] || [ $# -ne 1 ]
+if [ $? -eq 0 ]
 then
-    echo "usage: deploy.sh <project-directory>"
+    echo "usage: deploy.sh"
     exit 1
 fi
-
-PROJECT_DIR="$(echo "${1}" | sed -r "s|(.)/+$|\1|")"
 
 #
 # Ensure there repo is up to date.
@@ -22,18 +20,29 @@ then
     exit 1
 fi
 
-#
-# Stage the target directory.
-#
+while read LESSON
+do
+    LESSON="$(basename "${LESSON}")"
 
-rsync -ai "${PROJECT_DIR}/" _stage
+    #
+    # Stage the target directory.
+    #
 
-#
-# Remove unnecessary files.
-#
+    rsync -ai "${LESSON}" _stage
 
-rm "_stage/README.md"
-rm "_stage/package.json"
+    #
+    # Remove unnecessary files.
+    #
+    
+    rm "_stage/${LESSON}/README.md"
+    rm "_stage/${LESSON}/package.json"
+
+    #
+    # Add a link for the lesson site to the root index.
+    #
+
+    echo "<a href=\"${LESSON}\">${LESSON}</a><br>" >> "_stage/index.html"
+done < <(find . -maxdepth 1 -type d \( -not -path . \) | sort)
 
 #
 # Add the staging dir to the repo.
@@ -41,7 +50,7 @@ rm "_stage/package.json"
 
 ORIGINAL_HEAD="$(git rev-parse --short HEAD)"
 git add --force _stage
-git commit -m "Deploying staged site files."
+git commit -m "Deploying staged lesson sites."
 
 #
 # Push the contents of the staging dir to the 'gh-pages' remote branch.
