@@ -64,15 +64,13 @@ function ProductList()
 
     function get(productId)
     {
-        for(let product of _productList)
-        {
-            if(product.id == productId)
-            {
-                return product;
-            }
-        }
+        return _productList.find(function(p){ return p.id == productId; });
+    }
 
-        return null;
+    function has(productId)
+    {
+        let product = _productList.find(function(p){ return p.id == productId; });
+        return (product) ? true : false;
     }
 
     return {
@@ -80,7 +78,8 @@ function ProductList()
         save,
         length,
         forEach,
-        get
+        get,
+        has
     };
 }
 

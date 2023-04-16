@@ -152,37 +152,20 @@ function buildContent(productList, cart)
     }
 
     //
-    // Ensure a product was requested.
+    // Check for an empty cart.
     //
 
-    let productId = getProductId();
-    if(!productId || productId == "")
+    if(cart.productCount() == 0)
     {
-        let message = "The requested product could not be located.";
-        buildErrorContentWithRedirect(contentElement, message);
+        let template = `
+            <p>Your cart is empty.</p>
+        `;
+        render(contentElement, template);
         return;
     }
-
-    //
-    // Ensure the product exists.
-    //
-
-    let product = productList.get(productId);
-    if(!product)
-    {
-        let message = "The requested product could not be located.";
-        buildErrorContentWithRedirect(contentElement, message);
-        return;
-    }
-
-    //
-    // Display the product.
-    //
-
-    buildProductContent(contentElement, product, cart);
 }
 
-function buildCart(cart)
+function buildCart(productList, cart)
 {
     function cartTemplateGenerator()
     {
@@ -207,7 +190,7 @@ async function main()
     cart.load();
 
     buildContent(productList, cart);
-    buildCart(cart);
+    buildCart(productList, cart);
 }
 
 ////////////////////////////////
