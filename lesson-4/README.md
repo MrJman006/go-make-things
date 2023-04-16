@@ -6,5 +6,9 @@ This is where the template is used to generate a DOM chunk that is then diffed
 against the corresponding live DOM chunk. Only the parts that are new are
 updated. The diffing process can get pretty complicted pretty fast and that is
 why many different frameworks have been created to handle the diffing process.
-A small library called [reef](https://reefjs.com/) is provided to handle diffing for this workshop.
+A small library called [reef](https://reefjs.com/) is provided to handle diffing
+for this workshop.
+
+Lesson 4 has us adding an add to cart button that is only displayed if the item
+is not already in the cart. Cart data should be preserved across session.
 

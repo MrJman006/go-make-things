@@ -8,3 +8,8 @@ positive for MPAs since browsers already implement client side routing well.
 Other characteristics of SPAs can also be pretty closely matched in MPAs using
 service workers and various build processes.
 
+Lesson 2 has us improve online shop to allow clicking on a product. The
+destination should be a product page showing the full sized product image and
+some additional details about the product. We are free to do this in a SPA or
+MPA style.
+
