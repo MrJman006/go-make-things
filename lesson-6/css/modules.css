@@ -65,11 +65,14 @@
 .button
 {
     display: inline-block;
+    cursor: pointer;
+}
+
+.button.primary
+{
     line-height: 1.24;
-    font-size: 1em;
     font-weight: bold;
     padding: 0.5em 1em;
-    cursor: pointer;
     color: #ffffff;
     background-color: #015db9;
 }
@@ -81,5 +84,75 @@
 .cart
 {
     color: black;
+}
+
+/*******************************
+* Cart Item
+**/
+
+.cart-item
+{
+    width: 100%;
+    display: flex;
+    border-top: 1px solid #e5e5e5;
+    padding-bottom: 0.5em;
+    padding-top: 0.5em;
+    justify-content: space-between;
+}
+
+.cart-item__product-image
+{
+    width: 8em;
+    height: 8em;
+    object-fit: cover;
+    margin-right: 1em;
+}
+
+.cart-item__product-name
+{
+    margin-top: 0.25em;
+    text-align: center;
+}
+
+.cart-item__order-detail
+{
+    line-height: 8em;
+    display: flex;
+}
+
+.cart-item__product-price
+{
+    text-align: right;
+}
+
+.cart-item__remove-item-button
+{
+    width: 1em;
+    margin-left: 1em;
+}
+
+.total-bar
+{
+    display: flex;
+    justify-content: end;
+    border-top: 1px solid #e5e5e5;
+    padding-top: 0.5em;
+}
+
+.total-bar__label
+{
+    font-weight: bold;
+    margin-right: 1em;
+}
+
+.total-bar__total
+{
+    text-align: right;
+}
+
+.checkout-bar
+{
+    text-align: center;
+    margin-top: 2em;
 }
 

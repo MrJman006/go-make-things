@@ -67,7 +67,7 @@ function ProductList()
         return _productList.find(function(p){ return p.id == productId; });
     }
 
-    function has(productId)
+    function contains(productId)
     {
         let product = _productList.find(function(p){ return p.id == productId; });
         return (product) ? true : false;
@@ -79,7 +79,7 @@ function ProductList()
         length,
         forEach,
         get,
-        has
+        contains
     };
 }
 

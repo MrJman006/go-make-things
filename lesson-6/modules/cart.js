@@ -40,11 +40,17 @@ function Cart()
         return _cart.length;
     }
 
+    function forEachProduct(callback)
+    {
+        _cart.forEach(callback);
+    }
+
     return {
         load,
         addProduct,
         hasProduct,
-        productCount
+        productCount,
+        forEachProduct
     };
 }
 

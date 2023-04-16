@@ -151,18 +151,65 @@ function buildContent(productList, cart)
         return;
     }
 
-    //
-    // Check for an empty cart.
-    //
-
-    if(cart.productCount() == 0)
+    function checkoutListTemplateGenerator()
     {
-        let template = `
-            <p>Your cart is empty.</p>
+        //
+        // Check for an empty cart.
+        //
+    
+        if(cart.productCount() == 0)
+        {
+            let template = `
+                <p>Your cart is empty.</p>
+            `;
+            return template;
+        }
+    
+        //
+        // Show cart items.
+        //
+    
+        let checkoutTemplate = ``;
+        let checkoutTotal = 0;
+
+        cart.forEachProduct(
+            function(productId)
+            {
+                let product = productList.get(productId);
+                if(!product)
+                {
+                    return;
+                }
+
+                checkoutTotal += product.price;
+
+                let itemTemplate = `
+                    <div class="cart-item">
+                        <div class="cart-item__product-detail">
+                            <img class="cart-item__product-image" src="${product.url}" alt="${product.description}">
+                            <p class="cart-item__product-name">${product.name}</p>
+                        </div>
+                        <div class="cart-item__order-detail">
+                            <p class="cart-item__product-price">$${product.price}</p>
+                        </div>
+                    </div>
+                `;
+
+                checkoutTemplate += itemTemplate;
+            }
+        );
+
+        checkoutTemplate += `
+            <div class="total-bar">
+                <p class="total-bar__label">Total:</p>
+                <p class="total-bar__total">$${checkoutTotal}</p>
+            </div>
         `;
-        render(contentElement, template);
-        return;
+
+        return checkoutTemplate;
     }
+
+    component(contentElement, checkoutListTemplateGenerator);
 }
 
 function buildCart(productList, cart)

@@ -12,7 +12,7 @@ a:hover
 * Button
 **/
 
-.button:hover
+.button.primary:hover
 {
     background-color: #004182;
 }

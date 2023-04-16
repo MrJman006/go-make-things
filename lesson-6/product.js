@@ -99,7 +99,7 @@ function buildProductContent(contentElement, product, cart)
         {
             template = `
                 <div class="product-listing__cart-details">
-                    <a class="button" data-add-to-cart>Add To Cart</a>
+                    <a class="button primary" data-add-to-cart>Add To Cart</a>
                 </div>
             `;
         }
