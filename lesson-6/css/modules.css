@@ -112,6 +112,8 @@
 {
     margin-top: 0.25em;
     text-align: center;
+    margin-right: 1em;
+    width: 8em;
 }
 
 .cart-item__order-detail
