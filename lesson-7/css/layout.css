@@ -1,0 +1,58 @@
+/*******************************
+* Navigation
+**/
+
+.nav-bar
+{
+    padding: 1em 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 1fr;
+    grid-column-gap: 0;
+    grid-row-gap: 1em;
+}
+
+.nav-bar__items
+{
+    text-align: right;
+}
+
+.nav-bar__logo,
+.nav-bar__item,
+{
+    text-decoration: none;
+}
+
+/*******************************
+* Gallery
+**/
+
+@media (min-width: 20em)
+{
+    .gallery
+    {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: 1fr;
+        grid-column-gap: 2em;
+        grid-row-gap: 2em;
+    }
+}
+
+@media (min-width: 32em)
+{
+    .gallery
+    {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 42em)
+{
+    .gallery
+    {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+
