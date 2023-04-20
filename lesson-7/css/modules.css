@@ -98,6 +98,17 @@
     padding-bottom: 0.5em;
 }
 
+.label-bar__product-name
+{
+    width: 8em;
+    text-align: center;
+}
+
+.label-bar__product-price
+{
+    padding-right: 2em;
+}
+
 .cart-item
 {
     width: 100%;
@@ -158,6 +169,7 @@
 .total-bar__total
 {
     text-align: right;
+    margin-right: 2em;
 }
 
 .checkout-bar

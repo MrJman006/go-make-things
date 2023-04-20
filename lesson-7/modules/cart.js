@@ -29,6 +29,18 @@ function Cart()
         _cart.push(productId);
         Storage.local.setItem(_CACHE_ID, _cart);
     }
+
+    function removeProduct(productId)
+    {
+        if(!_cart.includes(productId))
+        {
+            return;
+        }
+
+        console.log("Removing product from the cart.");
+        _cart.splice(_cart.indexOf(productId), 1);
+        Storage.local.setItem(_CACHE_ID, _cart);
+    }
     
     function hasProduct(productId)
     {
@@ -48,6 +60,7 @@ function Cart()
     return {
         load,
         addProduct,
+        removeProduct,
         hasProduct,
         productCount,
         forEachProduct

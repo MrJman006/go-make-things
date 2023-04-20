@@ -55,7 +55,7 @@ function buildContent(productList, cart)
         let checkoutTemplate = `
             <div class="label-bar">
                 <p class="label-bar__product-name">Product</p>
-                <p class="label-bar__product-name">Price</p>
+                <p class="label-bar__product-price">Price</p>
             </div>
         `;
 
@@ -76,6 +76,7 @@ function buildContent(productList, cart)
                         </div>
                         <div class="cart-item__order-detail">
                             <p class="cart-item__product-price">$${product.price}</p>
+                            <a class="cart-item__remove-item-button button" data-remove-item="${product.id}">&#x2716</a>
                         </div>
                     </div>
                 `;
@@ -84,6 +85,18 @@ function buildContent(productList, cart)
             }
         );
 
+        function removeItemFromCart(e)
+        {
+            let productId = e.target.getAttribute("data-remove-item");
+            if(productId == "")
+            {
+                return;
+            }
+
+            cart.removeProduct(productId);
+        }
+
+        document.addEventListener("click", removeItemFromCart);
 
         let checkoutTotal = 0;
 
