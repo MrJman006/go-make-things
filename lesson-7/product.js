@@ -3,6 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
+import { showErrorMessage, showErrorMessageWithRedirect } from "./modules/utils.js";
 import { render, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
@@ -23,59 +24,6 @@ function getProductId()
     let url = new URL(window.location.href);
     let id = url.searchParams.get("id");
     return id;
-}
-
-function getProductData(products, productId)
-{
-    let productData = products.find((p) => { return p.id == productId; });
-    return productData;
-}
-
-function buildErrorContentTemplate(message)
-{
-    let template = `<p>${message}</p>`;
-    return template;
-}
-
-function buildErrorContentRedirectTemplate(message, reactiveData)
-{
-    return template;
-}
-
-function buildErrorContentWithRedirect(contentElement, message)
-{
-    let remainingSec = 3;
-
-    function templateGenerator()
-    {
-        return `<p>${message} Redirecting to the product gallery in ${remainingSec} seconds.</p>`;
-    };
-
-    render(contentElement, templateGenerator());
-
-    let interval;
-    let intervalDelayMilliSec = 1000;
-
-    function update()
-    {
-        remainingSec -= 1;
-        render(contentElement, templateGenerator());
-        if(remainingSec == 0 )
-        {
-            clearInterval(interval);
-            window.location.href = "/";
-        }
-    }
-
-    interval = setInterval(update, intervalDelayMilliSec);
-}
-
-function buildErrorContent(contentElement, message)
-{
-    let template = `
-        <p>${message}</p>
-    `;
-    render(contentElement, template);
 }
 
 function buildProductContent(contentElement, product, cart)
@@ -147,7 +95,7 @@ function buildContent(productList, cart)
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        buildErrorContent(contentElement, message);
+        showErrorMessage(contentElement, message);
         return;
     }
 
@@ -159,7 +107,7 @@ function buildContent(productList, cart)
     if(!productId || productId == "")
     {
         let message = "The requested product could not be located.";
-        buildErrorContentWithRedirect(contentElement, message);
+        showErrorMessageWithRedirect(contentElement, message);
         return;
     }
 
@@ -171,7 +119,7 @@ function buildContent(productList, cart)
     if(!product)
     {
         let message = "The requested product could not be located.";
-        buildErrorContentWithRedirect(contentElement, message);
+        showErrorMessageWithRedirect(contentElement, message);
         return;
     }
 
