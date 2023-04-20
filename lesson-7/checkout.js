@@ -52,8 +52,12 @@ function buildContent(productList, cart)
         // Show cart items.
         //
     
-        let checkoutTemplate = ``;
-        let checkoutTotal = 0;
+        let checkoutTemplate = `
+            <div class="label-bar">
+                <p class="label-bar__product-name">Product</p>
+                <p class="label-bar__product-name">Price</p>
+            </div>
+        `;
 
         cart.forEachProduct(
             function(productId)
@@ -63,8 +67,6 @@ function buildContent(productList, cart)
                 {
                     return;
                 }
-
-                checkoutTotal += product.price;
 
                 let itemTemplate = `
                     <div class="cart-item">
@@ -79,6 +81,22 @@ function buildContent(productList, cart)
                 `;
 
                 checkoutTemplate += itemTemplate;
+            }
+        );
+
+
+        let checkoutTotal = 0;
+
+        cart.forEachProduct(
+            function(productId)
+            {
+                let product = productList.get(productId);
+                if(!product)
+                {
+                    return;
+                }
+
+                checkoutTotal += product.price;
             }
         );
 

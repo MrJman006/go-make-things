@@ -90,6 +90,14 @@
 * Cart Item
 **/
 
+.label-bar
+{
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    padding-bottom: 0.5em;
+}
+
 .cart-item
 {
     width: 100%;
