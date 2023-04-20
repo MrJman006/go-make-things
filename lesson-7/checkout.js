@@ -4,7 +4,8 @@
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
 import { showErrorMessage } from "./modules/utils.js";
-import { render, component } from "./vendors/reef/reef.es.min.js"
+import { notify } from "./modules/notifier.js";
+import { render, store, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
 // Constants
@@ -94,6 +95,14 @@ function buildContent(productList, cart)
             }
 
             cart.removeProduct(productId);
+
+            let product = productList.get(productId);
+            if(!product)
+            {
+                return;
+            }
+
+            notify(`Removed '${product.name}' from the cart.`);
         }
 
         document.addEventListener("click", removeItemFromCart);
