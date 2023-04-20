@@ -20,6 +20,25 @@ import { render, store, component } from "./vendors/reef/reef.es.min.js"
 ////////////////////////////////
 // Functions
 
+function removeItemFromCart(e, cart, productList)
+{
+    let productId = e.target.getAttribute("data-remove-item");
+    if(productId == "")
+    {
+        return;
+    }
+
+    cart.removeProduct(productId);
+
+    let product = productList.get(productId);
+    if(!product)
+    {
+        return;
+    }
+
+    notify(`Removed '${product.name}' from the cart.`);
+}
+
 function buildContent(productList, cart)
 {
     let contentElement = document.querySelector("[data-content]");
@@ -37,75 +56,51 @@ function buildContent(productList, cart)
 
     function checkoutListTemplateGenerator()
     {
-        //
-        // Check for an empty cart.
-        //
-    
-        if(cart.productCount() == 0)
-        {
-            let template = `
-                <p>Your cart is empty.</p>
-            `;
-            return template;
-        }
-    
-        //
-        // Show cart items.
-        //
-    
-        let checkoutTemplate = `
+        let template = `
             <div class="label-bar">
                 <p class="label-bar__product-name">Product</p>
                 <p class="label-bar__product-price">Price</p>
             </div>
         `;
 
-        cart.forEachProduct(
-            function(productId)
-            {
-                let product = productList.get(productId);
-                if(!product)
-                {
-                    return;
-                }
-
-                let itemTemplate = `
-                    <div class="cart-item">
-                        <div class="cart-item__product-detail">
-                            <img class="cart-item__product-image" src="${product.url}" alt="${product.description}">
-                            <p class="cart-item__product-name">${product.name}</p>
-                        </div>
-                        <div class="cart-item__order-detail">
-                            <p class="cart-item__product-price">$${product.price}</p>
-                            <a class="cart-item__remove-item-button button" data-remove-item="${product.id}">&#x2716</a>
-                        </div>
-                    </div>
-                `;
-
-                checkoutTemplate += itemTemplate;
-            }
-        );
-
-        function removeItemFromCart(e)
+        //
+        // Check for an empty cart.
+        //
+    
+        if(cart.productCount() == 0)
         {
-            let productId = e.target.getAttribute("data-remove-item");
-            if(productId == "")
-            {
-                return;
-            }
-
-            cart.removeProduct(productId);
-
-            let product = productList.get(productId);
-            if(!product)
-            {
-                return;
-            }
-
-            notify(`Removed '${product.name}' from the cart.`);
+            template += `
+                <p>Your cart is empty.</p>
+            `;
         }
+        else
+        {
+            cart.forEachProduct(
+                function(productId)
+                {
+                    let product = productList.get(productId);
+                    if(!product)
+                    {
+                        return;
+                    }
 
-        document.addEventListener("click", removeItemFromCart);
+                    let itemTemplate = `
+                        <div class="cart-item">
+                            <div class="cart-item__product-detail">
+                                <img class="cart-item__product-image" src="${product.url}" alt="${product.description}">
+                                <p class="cart-item__product-name">${product.name}</p>
+                            </div>
+                            <div class="cart-item__order-detail">
+                                <p class="cart-item__product-price">$${product.price}</p>
+                                <a class="cart-item__remove-item-button button" data-remove-item="${product.id}">&#x2716</a>
+                            </div>
+                        </div>
+                    `;
+
+                    template += itemTemplate;
+                }
+            );
+        }
 
         let checkoutTotal = 0;
 
@@ -122,14 +117,14 @@ function buildContent(productList, cart)
             }
         );
 
-        checkoutTemplate += `
+        template += `
             <div class="total-bar">
                 <p class="total-bar__label">Total:</p>
                 <p class="total-bar__total">$${checkoutTotal}</p>
             </div>
         `;
 
-        return checkoutTemplate;
+        return template;
     }
 
     component(contentElement, checkoutListTemplateGenerator);
@@ -161,6 +156,9 @@ async function main()
 
     buildContent(productList, cart);
     buildCart(productList, cart);
+
+    
+    document.addEventListener("click", function(e){ removeItemFromCart(e, cart, productList); });
 }
 
 ////////////////////////////////

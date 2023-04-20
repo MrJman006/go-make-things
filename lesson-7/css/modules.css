@@ -96,6 +96,8 @@
     justify-content: space-between;
     font-weight: bold;
     padding-bottom: 0.5em;
+    margin-bottom: 1em;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .label-bar__product-name
@@ -117,6 +119,11 @@
     padding-bottom: 0.5em;
     padding-top: 0.5em;
     justify-content: space-between;
+}
+
+.cart-item:nth-child(2)
+{
+    border-top: none;
 }
 
 .cart-item__product-image
@@ -158,6 +165,7 @@
     justify-content: end;
     border-top: 1px solid #e5e5e5;
     padding-top: 0.5em;
+    margin-top: 1em;
 }
 
 .total-bar__label
