@@ -41,6 +41,12 @@ function Cart()
         _cart.splice(_cart.indexOf(productId), 1);
         Storage.local.setItem(_CACHE_ID, _cart);
     }
+
+    function removeAllProducts()
+    {
+        Storage.local.removeItem(_CACHE_ID);
+        load();
+    }
     
     function hasProduct(productId)
     {
@@ -61,6 +67,7 @@ function Cart()
         load,
         addProduct,
         removeProduct,
+        removeAllProducts,
         hasProduct,
         productCount,
         forEachProduct

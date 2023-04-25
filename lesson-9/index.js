@@ -3,7 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showErrorMessage } from "./modules/utils.js";
+import { showMessage } from "./modules/utils.js";
 import { component } from "./vendors/reef/reef.es.min.js";
 
 ////////////////////////////////
@@ -31,7 +31,7 @@ function buildProductGallery(productList, cart)
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showErrorMessage(contentElement, message);
+        showMessage(contentElement, message);
         return;
     }
 

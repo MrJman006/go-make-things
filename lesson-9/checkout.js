@@ -3,7 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showErrorMessage } from "./modules/utils.js";
+import { showMessage } from "./modules/utils.js";
 import { notify } from "./modules/notifier.js";
 import { render, store, component } from "./vendors/reef/reef.es.min.js"
 
@@ -50,7 +50,7 @@ function buildContent(productList, cart)
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        buildErrorContent(contentElement, message);
+        buildContent(contentElement, message);
         return;
     }
 
@@ -128,7 +128,7 @@ function buildContent(productList, cart)
         {
             template += `
                 <div class="checkout-bar">
-                    <a class="checkout-button button primary">Checkout</a>
+                    <a class="checkout-button button primary" data-checkout>Checkout</a>
                 </div>
             `;
         }
@@ -155,6 +155,88 @@ function buildCart(productList, cart)
     component(cartElement, cartTemplateGenerator);
 }
 
+async function checkout(e, cart, productList)
+{
+    if(!e.target.hasAttribute("data-checkout"))
+    {
+        return;
+    }
+
+    let CHECKOUT_ENDPOINT = "https://gmtww-stripe.cfjcd.workers.dev";
+
+    //
+    // Build the request object.
+    //
+
+    let requestObject = {};
+
+    // Method.
+    requestObject.method = "POST";
+
+    // Headers.
+    requestObject.headers = {};
+    requestObject.headers["Content-type"] = "application/json";
+
+    // Body.
+    let requestBodyData = {};
+    requestBodyData.line_items = [];
+    requestBodyData.success_url = "http://127.0.0.1:9999/success.html";
+    requestBodyData.cancel_url = "http://127.0.0.1:9999/checkout.html";
+
+    cart.forEachProduct(
+        function(productId)
+        {
+            let product = productList.get(productId);
+    
+            if(!product)
+            {
+                return;
+            }
+
+            let line_items = requestBodyData.line_items;
+            line_items.push({});
+
+            let line_item = line_items[line_items.length - 1];
+            line_item.quantity = 1;
+            line_item.price_data = {};
+
+            let price_data = line_item.price_data;
+            price_data.currency = "usd";
+            price_data.product_data = {};
+            price_data.unit_amount = product.price * 100;
+
+            let product_data = price_data.product_data;
+            product_data.name = product.name;
+            product_data.description = product.description;
+            product_data.images = [];
+
+            let images = product_data.images;
+            images.push(product.url);
+        }
+    );
+
+    requestObject.body = JSON.stringify(requestBodyData);
+
+    // Call the middleman API
+    let response = await fetch(
+        CHECKOUT_ENDPOINT,
+        requestObject
+    );
+
+    if(!response.ok)
+    {
+        notify(`An error occured with the checkout system. Please notify the site administrator.`);
+
+        return;
+    }
+
+    // Get the response
+    let data = await response.json();
+
+    // Redirect to the payment page.
+    window.location.href = data.url;
+}
+
 async function main()
 {
     let productList = ProductList();
@@ -168,6 +250,7 @@ async function main()
 
     
     document.addEventListener("click", function(e){ removeItemFromCart(e, cart, productList); });
+    document.addEventListener("click", function(e){ checkout(e, cart, productList); });
 }
 
 ////////////////////////////////

@@ -1,6 +1,6 @@
 import {render} from "../vendors/reef/reef.es.min.js";
 
-function showErrorMessage(contentElement, message)
+function showMessage(contentElement, message)
 {
     let template = `
         <p>${message}</p>
@@ -8,9 +8,16 @@ function showErrorMessage(contentElement, message)
     render(contentElement, template);
 }
 
-function showErrorMessageWithRedirect(contentElement, message)
+function showMessageWithRedirect(contentElement, message, options = {})
 {
-    let remainingSec = 3;
+    let opts = Object.assign(
+        {
+            delay: 5
+        },
+        options
+    );
+
+    let remainingSec = opts.delay;
 
     function templateGenerator()
     {
@@ -37,7 +44,7 @@ function showErrorMessageWithRedirect(contentElement, message)
 }
 
 export {
-    showErrorMessage,
-    showErrorMessageWithRedirect
+    showMessage,
+    showMessageWithRedirect
 };
 

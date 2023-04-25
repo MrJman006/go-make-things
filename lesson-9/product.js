@@ -3,7 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showErrorMessage, showErrorMessageWithRedirect } from "./modules/utils.js";
+import { showMessage, showMessageWithRedirect } from "./modules/utils.js";
 import { render, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
@@ -95,7 +95,7 @@ function buildContent(productList, cart)
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showErrorMessage(contentElement, message);
+        showMessage(contentElement, message);
         return;
     }
 
@@ -107,7 +107,7 @@ function buildContent(productList, cart)
     if(!productId || productId == "")
     {
         let message = "The requested product could not be located.";
-        showErrorMessageWithRedirect(contentElement, message);
+        showMessageWithRedirect(contentElement, message);
         return;
     }
 
@@ -119,7 +119,7 @@ function buildContent(productList, cart)
     if(!product)
     {
         let message = "The requested product could not be located.";
-        showErrorMessageWithRedirect(contentElement, message);
+        showMessageWithRedirect(contentElement, message);
         return;
     }
 
