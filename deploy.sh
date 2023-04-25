@@ -38,6 +38,12 @@ do
     rm "_stage/${LESSON}/package.json"
 
     #
+    # Change localhost links.
+    #
+
+    find "_stage/${LESSON}" -type f -exec sed -ri "s|http://127.0.0.1:9999|https://mrjman006.github.io/gmt-webapps-workshop/${LESSON}|g" {} \;
+
+    #
     # Add a link for the lesson site to the root index.
     #
 
