@@ -15,18 +15,27 @@ import { render, store, component } from "./vendors/reef/reef.es.min.js"
 ////////////////////////////////
 // Variables
 
-// N/A
+let productList;
+let cart;
+let redirecting;
 
 ////////////////////////////////
-// Functions
+// Event Handlers
 
-function removeItemFromCart(e, cart, productList)
+function removeItemFromCart(e)
 {
-    let productId = e.target.getAttribute("data-remove-item");
-    if(productId == "")
+    if(!e.target.hasAttribute("data-remove-item"))
     {
         return;
     }
+
+    if(redirecting)
+    {
+        notify("Redirecting to the payment processor. Cannot modify cart.");
+        return;
+    }
+
+    let productId = e.target.getAttribute("data-remove-item");
 
     cart.removeProduct(productId);
 
@@ -39,7 +48,107 @@ function removeItemFromCart(e, cart, productList)
     notify(`Removed '${product.name}' from the cart.`);
 }
 
-function buildContent(productList, cart)
+async function checkout(e)
+{
+    if(!e.target.hasAttribute("data-checkout"))
+    {
+        return;
+    }
+
+    if(redirecting)
+    {
+        notify("A redirect to the payment processor is already in progress.");
+        return;
+    }
+
+    let CHECKOUT_ENDPOINT = "https://gmtww-stripe.cfjcd.workers.dev";
+
+    //
+    // Build the request object.
+    //
+
+    let requestObject = {};
+
+    // Method.
+    requestObject.method = "POST";
+
+    // Headers.
+    requestObject.headers = {};
+    requestObject.headers["Content-type"] = "application/json";
+
+    // Body.
+    let requestBodyData = {};
+    requestBodyData.line_items = [];
+    requestBodyData.success_url = "http://127.0.0.1:9999/success.html";
+    requestBodyData.cancel_url = "http://127.0.0.1:9999/cart.html";
+
+    cart.forEachProduct(
+        function(productId)
+        {
+            let product = productList.get(productId);
+
+            if(!product)
+            {
+                return;
+            }
+
+            let line_items = requestBodyData.line_items;
+            line_items.push({});
+
+            let line_item = line_items[line_items.length - 1];
+            line_item.quantity = 1;
+            line_item.price_data = {};
+
+            let price_data = line_item.price_data;
+            price_data.currency = "usd";
+            price_data.product_data = {};
+            price_data.unit_amount = product.price * 100;
+
+            let product_data = price_data.product_data;
+            product_data.name = product.name;
+            product_data.description = product.description;
+            product_data.images = [];
+
+            let images = product_data.images;
+            images.push(product.url);
+        }
+    );
+
+    requestObject.body = JSON.stringify(requestBodyData);
+
+    redirecting = true;
+    notify(`Redirecting to payment processor...`);
+
+    // Call the middleman API
+    let response = await fetch(
+        CHECKOUT_ENDPOINT,
+        requestObject
+    );
+
+    if(!response.ok)
+    {
+        notify(`Failed to redirect to the payment processor. Please notify the site administrator.`);
+        redirecting = false;
+        return;
+    }
+
+    // Get the response
+    let data = await response.json();
+
+    // Redirect to the payment page.
+    window.location.href = data.url;
+}
+
+function onClick(e)
+{
+    removeItemFromCart(e);
+    checkout(e);
+}
+
+////////////////////////////////
+// Functions
+
+function buildContent()
 {
     let contentElement = document.querySelector("[data-content]");
 
@@ -139,7 +248,7 @@ function buildContent(productList, cart)
     component(contentElement, checkoutListTemplateGenerator);
 }
 
-function buildCart(productList, cart)
+function buildCart()
 {
     function cartTemplateGenerator()
     {
@@ -155,102 +264,20 @@ function buildCart(productList, cart)
     component(cartElement, cartTemplateGenerator);
 }
 
-async function checkout(e, cart, productList)
-{
-    if(!e.target.hasAttribute("data-checkout"))
-    {
-        return;
-    }
-
-    let CHECKOUT_ENDPOINT = "https://gmtww-stripe.cfjcd.workers.dev";
-
-    //
-    // Build the request object.
-    //
-
-    let requestObject = {};
-
-    // Method.
-    requestObject.method = "POST";
-
-    // Headers.
-    requestObject.headers = {};
-    requestObject.headers["Content-type"] = "application/json";
-
-    // Body.
-    let requestBodyData = {};
-    requestBodyData.line_items = [];
-    requestBodyData.success_url = "http://127.0.0.1:9999/success.html";
-    requestBodyData.cancel_url = "http://127.0.0.1:9999/checkout.html";
-
-    cart.forEachProduct(
-        function(productId)
-        {
-            let product = productList.get(productId);
-    
-            if(!product)
-            {
-                return;
-            }
-
-            let line_items = requestBodyData.line_items;
-            line_items.push({});
-
-            let line_item = line_items[line_items.length - 1];
-            line_item.quantity = 1;
-            line_item.price_data = {};
-
-            let price_data = line_item.price_data;
-            price_data.currency = "usd";
-            price_data.product_data = {};
-            price_data.unit_amount = product.price * 100;
-
-            let product_data = price_data.product_data;
-            product_data.name = product.name;
-            product_data.description = product.description;
-            product_data.images = [];
-
-            let images = product_data.images;
-            images.push(product.url);
-        }
-    );
-
-    requestObject.body = JSON.stringify(requestBodyData);
-
-    // Call the middleman API
-    let response = await fetch(
-        CHECKOUT_ENDPOINT,
-        requestObject
-    );
-
-    if(!response.ok)
-    {
-        notify(`An error occured with the checkout system. Please notify the site administrator.`);
-
-        return;
-    }
-
-    // Get the response
-    let data = await response.json();
-
-    // Redirect to the payment page.
-    window.location.href = data.url;
-}
-
 async function main()
 {
-    let productList = ProductList();
+    redirecting = false;
+
+    productList = ProductList();
     await productList.load();
 
-    let cart = Cart();
+    cart = Cart();
     cart.load();
 
-    buildContent(productList, cart);
-    buildCart(productList, cart);
+    buildContent();
+    buildCart();
 
-    
-    document.addEventListener("click", function(e){ removeItemFromCart(e, cart, productList); });
-    document.addEventListener("click", function(e){ checkout(e, cart, productList); });
+    document.addEventListener("click", onClick);
 }
 
 ////////////////////////////////
