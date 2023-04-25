@@ -1,6 +1,6 @@
 # Lesson 8 - Functions As A Service (Serverless)
 
-Lesson 7 goes over Functions As A Service (FAAS) also known as serverless. FAAS
+Lesson 8 goes over Functions As A Service (FAAS) also known as serverless. FAAS
 let you host server functions without having to maintain an actual server. This
 can be beneficial because it lets you scale your app quickly without having to
 invest heavily in server architecture early in the project. Some important
@@ -14,6 +14,6 @@ requests.
 - By default FAAS is stateless, so you need some type of database service
 to store data. Most providers offer some type of database service.
 
-Lesson 7 has us used Cloudflare's FAAS infrastructure to replace the product
+Lesson 8 has us used Cloudflare's FAAS infrastructure to replace the product
 list API.
 
