@@ -53,8 +53,21 @@ function buildProductGallery(productList)
     productList.forEach(buildProductCard);
 }
 
+function cleanupUrl()
+{
+    if(!window.history.replaceState)
+    {
+        return;
+    }
+
+    let regex = new RegExp("/index.html$");
+    let cleanUrl = window.location.href.replace(regex, "/")
+    window.history.replaceState(null, null, cleanUrl);
+}
+
 async function main()
 {
+    cleanupUrl();
     let productList = ProductList();
     await productList.load();
     buildProductGallery(productList);

@@ -56,7 +56,7 @@ function buildProductContent(products)
         contentElement.innerHTML = `
             <p>The requested product could not be located. Redirecting to the product gallery.</p>
         `;
-        setTimeout((e) => { window.location.href = "/"; }, 3000);
+        setTimeout((e) => { window.location.href = "index.html"; }, 3000);
         return;       
     }
 
@@ -70,7 +70,7 @@ function buildProductContent(products)
         contentElement.innerHTML = `
             <p>The requested product could not be located. Redirecting to the product gallery.</p>
         `;
-        setTimeout((e) => { window.location.href = "/"; }, 3000);
+        setTimeout((e) => { window.location.href = "index.html"; }, 3000);
         return;
     }
 

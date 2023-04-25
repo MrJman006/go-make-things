@@ -63,7 +63,7 @@ function buildErrorContentWithRedirect(contentElement, message)
         if(remainingSec == 0 )
         {
             clearInterval(interval);
-            window.location.href = "/";
+            window.location.href = "index.html";
         }
     }
 

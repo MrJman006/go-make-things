@@ -77,8 +77,21 @@ async function fetchProductData()
     }
 }
 
+function cleanupUrl()
+{
+    if(!window.history.replaceState)
+    {
+        return;
+    }
+
+    let regex = new RegExp("/index.html$");
+    let cleanUrl = window.location.href.replace(regex, "/")
+    window.history.replaceState(null, null, cleanUrl);
+}
+
 async function main()
 {
+    cleanupUrl();
     await fetchProductData();
     buildProductGallery();
 }
