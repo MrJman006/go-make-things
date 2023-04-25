@@ -8,7 +8,7 @@ import { Storage } from "./storage.js"
 
 function ProductList()
 {
-    let _PRODUCTS_ENDPOINT = "https://vanillajsacademy.com/api/photos.json";
+    let _PRODUCTS_ENDPOINT = "https://gmt-webapps-workshop.cfjcd.workers.dev";
     let _CACHE_ID = "productList";
     let _productList = [];
 
