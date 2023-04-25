@@ -87,7 +87,7 @@ function buildContent(productList, cart)
                     let itemTemplate = `
                         <div class="cart-item">
                             <div class="cart-item__product-detail">
-                                <img class="cart-item__product-image" src="${product.url}" alt="${product.description}">
+                                <a href="product.html?id=${product.id}"><img class="cart-item__product-image" src="${product.url}" alt="${product.description}"></a>
                                 <p class="cart-item__product-name">${product.name}</p>
                             </div>
                             <div class="cart-item__order-detail">
@@ -123,6 +123,15 @@ function buildContent(productList, cart)
                 <p class="total-bar__total">$${checkoutTotal}</p>
             </div>
         `;
+
+        if(cart.productCount() != 0)
+        {
+            template += `
+                <div class="checkout-bar">
+                    <a class="checkout-button button primary">Checkout</a>
+                </div>
+            `;
+        }
 
         return template;
     }
