@@ -14,6 +14,6 @@ requests.
 - By default FAAS is stateless, so you need some type of database service
 to store data. Most providers offer some type of database service.
 
-Lesson 8 has us used Cloudflare's FAAS infrastructure to replace the product
+Lesson 8 has us use Cloudflare's FAAS infrastructure to replace the product
 list API.
 
