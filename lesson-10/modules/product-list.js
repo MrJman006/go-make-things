@@ -27,10 +27,12 @@ function ProductList()
         try
         {
             console.log("Fetching fresh product list from the server.");
+
             let result = await fetch(_PRODUCTS_ENDPOINT);
+
             if(!result.ok)
             {
-                throw result;
+                throw result.status;
             }
         
             _productList = await result.json();
