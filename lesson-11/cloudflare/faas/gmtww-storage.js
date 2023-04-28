@@ -1,5 +1,5 @@
 //
-// This file just pretends that the KV is a plain object. To actually use the
+// This file just pretends that a Cloudflare KV is a plain object. To actually use the
 // data in this file, you have to manually add each of the KV assignments below
 // to a Cloudflare KV.
 //
