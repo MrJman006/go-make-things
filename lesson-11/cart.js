@@ -78,9 +78,11 @@ async function checkout(e)
 
     // Body.
     let requestBodyData = {};
-    requestBodyData.line_items = [];
+    requestBodyData.currency = "usd";
     requestBodyData.success_url = "http://127.0.0.1:9999/success.html";
     requestBodyData.cancel_url = "http://127.0.0.1:9999/cart.html";
+
+    let cart_items = [];
 
     cart.forEachProduct(
         function(productId)
@@ -92,34 +94,24 @@ async function checkout(e)
                 return;
             }
 
-            let line_items = requestBodyData.line_items;
-            line_items.push({});
+            let cart_item = {};
+            cart_item.product_id = product.id;
+            cart_item.quantity = 1;
 
-            let line_item = line_items[line_items.length - 1];
-            line_item.quantity = 1;
-            line_item.price_data = {};
-
-            let price_data = line_item.price_data;
-            price_data.currency = "usd";
-            price_data.product_data = {};
-            price_data.unit_amount = product.price * 100;
-
-            let product_data = price_data.product_data;
-            product_data.name = product.name;
-            product_data.description = product.description;
-            product_data.images = [];
-
-            let images = product_data.images;
-            images.push(product.url);
+            cart_items.push(cart_item);
         }
     );
 
+    requestBodyData.cart_items = cart_items;
     requestObject.body = JSON.stringify(requestBodyData);
+
+    //
+    // Call the middleman API
+    //
 
     redirecting = true;
     notify(`Redirecting to payment processor...`);
 
-    // Call the middleman API
     let response = await fetch(
         CHECKOUT_ENDPOINT,
         requestObject

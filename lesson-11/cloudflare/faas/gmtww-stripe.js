@@ -36,6 +36,93 @@ function buildQuery(data, prefix)
 }
 
 /*******************************
+* Create the line items portion of the Stripe request data.
+*
+* @param  {Object} cart_items   The cart items to display.
+* @param  {String} currency     The currency to display.
+* @param  {String} product_list The list of available products.
+* @return {Object}              An array of line items to display on the Stripe page.
+**/
+function buildStripeLineItem(cart_item, currency, product_list)
+{
+    let product = product_list.find(
+        function(p)
+        {
+            return cart_item.product_id == p.id; 
+        }
+    );
+
+    if(!product)
+    {
+        return {};
+    }
+
+    let line_item = {};
+    line_item.quantity = cart_item.quantity;
+    line_item.price_data = {};
+
+    let price_data = line_item.price_data;
+    price_data.currency = currency;
+    price_data.product_data = {};
+    price_data.unit_amount = product.price * 100;
+
+    let product_data = price_data.product_data;
+    product_data.name = product.name;
+    product_data.description = product.description;
+    product_data.images = [];
+
+    let images = product_data.images;
+    images.push(product.url);
+
+    return line_item;
+}
+
+/*******************************
+* Create a Stripe request object using the supplied checkout data.
+*
+* @param  {Object} checkoutData   The checkout data to use.
+* @return {Object}                A valid request object.
+**/
+function buildStripeRequest(checkoutData, product_list)
+{
+    let {cart_items, currency, success_url, cancel_url} = checkoutData;
+
+    let requestObject = {};
+
+    // Method.
+    requestObject.method = "POST";
+
+    // Headers.
+    requestObject.headers = {};
+    requestObject.headers["Authorization"] = `Bearer ${API_TOKEN}`;
+    requestObject.headers["Content-Type"] = "application/x-www-form-urlencoded";
+
+    // Body.
+
+    let line_items = [];
+
+    cart_items.forEach(
+        function(cart_item)
+        {
+            let line_item = buildStripeLineItem(cart_item, currency, product_list);
+            line_items.push(line_item);
+        }
+    );
+
+    let requestData = {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items,
+        success_url,
+        cancel_url
+    }
+
+    requestObject.body = buildQuery(requestData);
+
+    return requestObject;
+}
+
+/*******************************
 * Respond to the request
 *
 * @param {Request} request
@@ -47,6 +134,23 @@ async function handleRequest(request)
         'Access-Control-Allow-Methods': 'HEAD, POST, OPTIONS',
         'Access-Control-Allow-Headers': '*'
     });
+
+    let origin = request.headers.get("origin");
+
+    let allowedOrigins = [
+        "http://127.0.0.1:9999"
+    ];
+
+    if(!allowedOrigins.includes(origin))
+    {
+        return new Response(
+            "Not allowed",
+            {
+                status: 403,
+                headers: headers
+            }
+        );
+    }
 
     // Catch-all for non-POST request types
     if(request.method !== 'POST')
@@ -60,39 +164,31 @@ async function handleRequest(request)
         );
     }
 
-    // Get checkout session token
+    // Get the product list.
+    let product_list_json = await GMTWW_STORAGE.get("PRODUCTS")
+    let product_list = JSON.parse(product_list_json);
+
+    // Get the checkout request data
+    let checkoutData = await request.json();
+
+    // Build the stripe request.
+    let stripeRequest = buildStripeRequest(checkoutData, product_list);
+
     try
     {
-        // Get the request data
-        let body = await request.json();
-        let {line_items, success_url, cancel_url} = body;
-
         // Call the Stripe API
         let STRIPE_ENDPOINT = "https://api.stripe.com/v1/checkout/sessions";
-        let stripeRequest = await fetch(
+        let stripeResponse = await fetch(
             STRIPE_ENDPOINT,
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${API_TOKEN}`,
-                    'Content-type': 'application/x-www-form-urlencoded'
-                },
-                body: buildQuery({
-                    payment_method_types: ['card'],
-                    mode: 'payment',
-                    line_items,
-                    success_url,
-                    cancel_url
-                })
-            }
+            stripeRequest
         );
 
         // Get the API response
-        let stripeResponse = await stripeRequest.json();
+        let stripeResponseData = await stripeResponse.json();
 
         // Return the data
         return new Response(
-            JSON.stringify(stripeResponse),
+            JSON.stringify(stripeResponseData),
             {
                 status: 200,
                 headers: headers
@@ -119,4 +215,3 @@ addEventListener(
         event.respondWith(handleRequest(event.request));
     }
 );
-

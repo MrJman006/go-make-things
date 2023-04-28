@@ -1,15 +1,31 @@
-/**
- * Respond to the request
- * @param {Request} request
- */
+/*******************************
+* Respond to the request
+* @param {Request} request
+**/
 async function handleRequest(request)
 {
-
     let headers = new Headers({
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Methods': 'HEAD, GET, OPTIONS',
         'Access-Control-Allow-Headers': '*'
     });
+
+    let origin = request.headers.get("origin");
+
+    let allowedOrigins = [
+        "http://127.0.0.1:9999"
+    ];
+
+    if(!allowedOrigins.includes(origin))
+    {
+        return new Response(
+            "Not allowed",
+            {
+                status: 403,
+                headers: headers
+            }
+        );
+    }
 
     if(request.method !== "GET")
     {
@@ -32,7 +48,6 @@ async function handleRequest(request)
             headers: headers
         }
     );
-
 }
 
 // Listen for API calls
