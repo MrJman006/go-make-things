@@ -13,7 +13,8 @@ async function handleRequest(request)
     let origin = request.headers.get("origin");
 
     let allowedOrigins = [
-        "http://127.0.0.1:9999"
+        "http://127.0.0.1:9999",
+        "https://mrjman006.github.io"
     ];
 
     if(!allowedOrigins.includes(origin))
