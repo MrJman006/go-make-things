@@ -33,7 +33,6 @@ function notify(message)
     );
 }
 
-window.notify = notify;
 export {
     notify
 };

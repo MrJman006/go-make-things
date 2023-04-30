@@ -73,14 +73,9 @@ function buildCart(cart)
 
 function cleanupUrl()
 {
-    if(!window.history.replaceState)
-    {
-        return;
-    }
-
     let regex = new RegExp("/index.html$");
-    let cleanUrl = window.location.href.replace(regex, "/")
-    window.history.replaceState(null, null, cleanUrl);
+    let cleanUrl = location.href.replace(regex, "/")
+    history.replaceState(history.state, null, cleanUrl);
 }
 
 async function main()

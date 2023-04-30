@@ -31,16 +31,18 @@ function showMessageWithRedirect(contentElement, message, options = {})
 
     function update()
     {
-        remainingSec -= 1;
         render(contentElement, templateGenerator());
         if(remainingSec == 0 )
         {
-            clearInterval(interval);
-            window.location.href = "index.html";
+            location.replace("index.html");
         }
+
+        remainingSec -= 1;
+        let ONE_SECOND = 1000;
+        setTimeout(update, ONE_SECOND);
     }
 
-    interval = setInterval(update, intervalDelayMilliSec);
+    update();
 }
 
 export {
