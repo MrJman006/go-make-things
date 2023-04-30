@@ -3,8 +3,9 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showMessage, parseUrlProductIds, clearUrlProductIds } from "./modules/utils.js";
-import { notify } from "./modules/notifier.js";
+import { parseUrlProductIds, clearUrlProductIds } from "./modules/utils.js";
+import { showNotification } from "./modules/notifications.js";
+import { showErrorMessage } from "./modules/errors.js";
 import { render, store, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
@@ -31,7 +32,7 @@ function removeItemFromCart(e)
 
     if(redirecting)
     {
-        notify("Redirecting to the payment processor. Cannot modify cart.");
+        showNotification("Redirecting to the payment processor. Cannot modify cart.");
         return;
     }
 
@@ -45,7 +46,7 @@ function removeItemFromCart(e)
         return;
     }
 
-    notify(`Removed '${product.name}' from the cart.`);
+    showNotification(`Removed '${product.name}' from the cart.`);
 }
 
 async function checkout(e)
@@ -57,7 +58,7 @@ async function checkout(e)
 
     if(redirecting)
     {
-        notify("A redirect to the payment processor is already in progress.");
+        showNotification("A redirect to the payment processor is already in progress.");
         return;
     }
 
@@ -116,7 +117,7 @@ async function checkout(e)
     //
 
     redirecting = true;
-    notify(`Redirecting to payment processor...`);
+    showNotification(`Redirecting to payment processor...`);
 
     let response = await fetch(
         CHECKOUT_ENDPOINT,
@@ -125,7 +126,7 @@ async function checkout(e)
 
     if(!response.ok)
     {
-        notify(`Failed to redirect to the payment processor. Please notify the site administrator.`);
+        showNotification(`Failed to redirect to the payment processor. Please notify the site administrator.`);
         redirecting = false;
         return;
     }
@@ -237,7 +238,7 @@ function checkoutListTemplateGenerator()
 
 function buildContent()
 {
-    let contentElement = document.querySelector("[data-content]");
+    let pageContentContainer = document.querySelector("[data-page-content]");
 
     //
     // Ensure that products are available.
@@ -246,11 +247,11 @@ function buildContent()
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showMessage(contentElement, message);
+        showMessage(message);
         return;
     } 
 
-    component(contentElement, checkoutListTemplateGenerator);
+    component(pageContentContainer, checkoutListTemplateGenerator);
 }
 
 function buildCart()
@@ -291,12 +292,11 @@ async function main()
 
     buildContent();
     buildCart();
-
-    document.addEventListener("click", onClick);
 }
 
 ////////////////////////////////
 // Script Entry Point
 
 window.addEventListener("load", (e) => { main(); });
+document.addEventListener("click", onClick);
 

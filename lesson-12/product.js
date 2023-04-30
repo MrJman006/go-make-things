@@ -3,7 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showMessage, showMessageWithRedirect } from "./modules/utils.js";
+import { showErrorMessage, showErrorMessageAndRedirect } from "./modules/errors.js";
 import { render, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
@@ -29,7 +29,7 @@ function getProductId()
 
 function buildProductContent(product)
 {
-    let contentElement = document.querySelector("[data-content]");
+    let pageContentContainer = document.querySelector("[data-page-content]");
 
     // Update the page title.
     document.title = `${product.name} | ${document.title}`;
@@ -72,15 +72,15 @@ function buildProductContent(product)
         return template;
     };
 
-    render(contentElement, templateGenerator());
+    render(pageContentContainer, templateGenerator());
 
     function onAddToCartClicked(e)
     {
         cart.add(product.id);
-        render(contentElement, templateGenerator());
+        render(pageContentContainer, templateGenerator());
     }
 
-    let addToCartButton = contentElement.querySelector("[data-add-to-cart]");
+    let addToCartButton = document.querySelector("[data-add-to-cart]");
     addToCartButton?.addEventListener(
         "click",
         onAddToCartClicked
@@ -89,7 +89,7 @@ function buildProductContent(product)
 
 function buildContent()
 {
-    let contentElement = document.querySelector("[data-content]");
+    let pageContentContainer = document.querySelector("[data-page-content]");
 
     //
     // Ensure that products are available.
@@ -98,7 +98,7 @@ function buildContent()
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showMessage(contentElement, message);
+        showErrorMessage(message);
         return;
     }
 
@@ -110,7 +110,7 @@ function buildContent()
     if(!productId || productId == "")
     {
         let message = "The requested product could not be located.";
-        showMessageWithRedirect(contentElement, message);
+        showErrorMessageAndRedirect(message);
         return;
     }
 
@@ -122,7 +122,7 @@ function buildContent()
     if(!product)
     {
         let message = "The requested product could not be located.";
-        showMessageWithRedirect(contentElement, message);
+        showErrorMessageAndRedirect(message);
         return;
     }
 

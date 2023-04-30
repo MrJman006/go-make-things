@@ -3,7 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showMessage } from "./modules/utils.js";
+import { showErrorMessage } from "./modules/errors.js";
 import { component } from "./vendors/reef/reef.es.min.js";
 
 ////////////////////////////////
@@ -22,8 +22,7 @@ let productList;
 
 function buildProductGallery()
 {
-    let contentElement = document.querySelector("[data-content]");
-    contentElement.replaceChildren();
+    let pageContentContainer = document.querySelector("[data-page-content]");
 
     //
     // Ensure that products are available.
@@ -32,7 +31,7 @@ function buildProductGallery()
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showMessage(contentElement, message);
+        showMessage(message);
         return;
     }
 
@@ -40,7 +39,7 @@ function buildProductGallery()
     // Build product cards.
     //    
 
-    contentElement.classList.add("gallery");
+    pageContentContainer.classList.add("gallery");
 
     function buildProductCard(product)
     {
@@ -50,7 +49,7 @@ function buildProductGallery()
                 <p class="product-card__title">${product.name}</p>
             </a>
         `;
-        contentElement.innerHTML += productElement;
+        pageContentContainer.innerHTML += productElement;
     }
 
     productList.forEach(buildProductCard);

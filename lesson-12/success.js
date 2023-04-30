@@ -3,7 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showMessageWithRedirect, parseUrlProductIds } from "./modules/utils.js";
+import { parseUrlProductIds } from "./modules/utils.js";
 import { render, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
@@ -21,8 +21,10 @@ let productIds;
 ////////////////////////////////
 // Functions
 
-function buildCheckoutSummary(contentElement, purchasedProductIds)
+function buildCheckoutSummary(purchasedProductIds)
 {
+    let pageContentContainer = document.querySelector("[data-page-content]");
+
     let template = `
         <p class="message">Thank you for shopping with us! Below is a summary of your purchase.</p>
         <div class="label-bar">
@@ -83,13 +85,14 @@ function buildCheckoutSummary(contentElement, purchasedProductIds)
         </div>
     `;
 
-    render(contentElement, template);
+    render(pageContentContainer, template);
 }
 
 function buildContent()
 {
-    let contentElement = document.querySelector("[data-content]");
+    let pageContentContainer = document.querySelector("[data-page-content]");
 
+    // Redirect if the URL is invalid.
     let purchasedProductIds = parseUrlProductIds();
     if(purchasedProductIds.length == 0)
     {
@@ -97,7 +100,7 @@ function buildContent()
         return;
     }
 
-    buildCheckoutSummary(contentElement, purchasedProductIds);
+    buildCheckoutSummary(purchasedProductIds);
 }
 
 function buildCart()
