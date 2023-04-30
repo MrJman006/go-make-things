@@ -136,6 +136,7 @@ async function handleCheckoutButtonClick(e)
 
     // Redirect to the payment page.
     cart.removeAll();
+    history.replaceState(history.state, null, cancel_url.toString());
     window.location.href = data.url;
 }
 
