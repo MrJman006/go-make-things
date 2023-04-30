@@ -20,6 +20,17 @@ let LocalStorage = (function()
         return value;
     }
 
+    function has(key)
+    {
+        let intermediate = localStorage.getItem(key);
+        if(intermediate)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     function remove(key)
     {
         localStorage.removeItem(key);
@@ -33,6 +44,7 @@ let LocalStorage = (function()
     return {
         "setItem": set,
         "getItem": get,
+        "hasItem": has,
         "removeItem": remove,
         "clearAll": clear
     };
@@ -57,6 +69,17 @@ let SessionStorage = (function()
         return value;
     }
 
+    function has(key)
+    {
+        let intermediate = sessionStorage.getItem(key);
+        if(intermediate)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     function remove(key)
     {
         sessionStorage.removeItem(key);
@@ -70,6 +93,7 @@ let SessionStorage = (function()
     return {
         "setItem": set,
         "getItem": get,
+        "hasItem": has,
         "removeItem": remove,
         "clearAll": clear
     };

@@ -12,21 +12,18 @@ function ProductList()
     let _CACHE_ID = "productList";
     let _productList = [];
 
-    async function load(options = { bypassCache: false })
+    async function load()
     {
-        if(!options.bypassCache)
+        if(Storage.session.hasItem(_CACHE_ID))
         {
+            console.log("Loading product list from the session cache.");
             _productList = Storage.session.getItem(_CACHE_ID);
-            if(_productList)
-            {
-                console.log("Loading product list from the session cache.");
-                return;
-            }
+            return;
         }
     
         try
         {
-            console.log("Fetching fresh product list from the server.");
+            console.log("Fetching product list from the server.");
 
             let result = await fetch(_PRODUCTS_ENDPOINT);
 
@@ -36,7 +33,10 @@ function ProductList()
             }
         
             _productList = await result.json();
+
+            console.log("Saving product list to the session cache.");
             Storage.session.setItem(_CACHE_ID, _productList);
+
             return;
         }
         catch(error)
@@ -46,12 +46,6 @@ function ProductList()
             _productList = [];
             return;
         }
-    }
-
-    function save()
-    {
-        console.log("Saving product list to the session cache.");
-        Storage.session.setItem(_CACHE_ID, _productList);
     }
 
     function length()
@@ -69,7 +63,7 @@ function ProductList()
         return _productList.find(function(p){ return p.id == productId; });
     }
 
-    function contains(productId)
+    function includes(productId)
     {
         let product = _productList.find(function(p){ return p.id == productId; });
         return (product) ? true : false;
@@ -77,11 +71,10 @@ function ProductList()
 
     return {
         load,
-        save,
         length,
         forEach,
         get,
-        contains
+        includes
     };
 }
 
