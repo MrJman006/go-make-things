@@ -14,7 +14,8 @@ import { render, component } from "./vendors/reef/reef.es.min.js"
 ////////////////////////////////
 // Variables
 
-// N/A
+let cart;
+let productList;
 
 ////////////////////////////////
 // Functions
@@ -26,8 +27,10 @@ function getProductId()
     return id;
 }
 
-function buildProductContent(contentElement, product, cart)
+function buildProductContent(product)
 {
+    let contentElement = document.querySelector("[data-content]");
+
     // Update the page title.
     document.title = `${product.name} | ${document.title}`;
 
@@ -35,7 +38,7 @@ function buildProductContent(contentElement, product, cart)
     {
         let template;
 
-        if(cart.hasProduct(product.id))
+        if(cart.has(product.id))
         {
             template = `
                 <div class="product-listing__cart-details">
@@ -73,7 +76,7 @@ function buildProductContent(contentElement, product, cart)
 
     function onAddToCartClicked(e)
     {
-        cart.addProduct(product.id);
+        cart.add(product.id);
         render(contentElement, templateGenerator());
     }
 
@@ -84,7 +87,7 @@ function buildProductContent(contentElement, product, cart)
     );
 }
 
-function buildContent(productList, cart)
+function buildContent()
 {
     let contentElement = document.querySelector("[data-content]");
 
@@ -127,14 +130,14 @@ function buildContent(productList, cart)
     // Display the product.
     //
 
-    buildProductContent(contentElement, product, cart);
+    buildProductContent(product);
 }
 
-function buildCart(cart)
+function buildCart()
 {
     function cartTemplateGenerator()
     {
-        let productCount = cart.productCount();
+        let productCount = cart.items().length;
         let cartTemplate = `
             <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
         `;
@@ -148,14 +151,14 @@ function buildCart(cart)
 
 async function main()
 {
-    let productList = ProductList();
+    productList = ProductList();
     await productList.load();
 
-    let cart = Cart();
+    cart = Cart();
     cart.load();
 
-    buildContent(productList, cart);
-    buildCart(cart);
+    buildContent();
+    buildCart();
 }
 
 ////////////////////////////////

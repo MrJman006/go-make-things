@@ -18,7 +18,7 @@ function Cart()
         _cart = store(Storage.local.getItem(_CACHE_ID) || []);
     }
     
-    function addProduct(productId)
+    function add(productId)
     {
         if(_cart.includes(productId))
         {
@@ -30,7 +30,7 @@ function Cart()
         Storage.local.setItem(_CACHE_ID, _cart);
     }
 
-    function removeProduct(productId)
+    function remove(productId)
     {
         if(!_cart.includes(productId))
         {
@@ -42,35 +42,29 @@ function Cart()
         Storage.local.setItem(_CACHE_ID, _cart);
     }
 
-    function removeAllProducts()
+    function removeAll()
     {
         Storage.local.removeItem(_CACHE_ID);
         load();
     }
     
-    function hasProduct(productId)
+    function has(productId)
     {
         return _cart.includes(productId);
     }
 
-    function productCount()
+    function items()
     {
-        return _cart.length;
-    }
-
-    function forEachProduct(callback)
-    {
-        _cart.forEach(callback);
+        return [..._cart];
     }
 
     return {
         load,
-        addProduct,
-        removeProduct,
-        removeAllProducts,
-        hasProduct,
-        productCount,
-        forEachProduct
+        add,
+        remove,
+        removeAll,
+        has,
+        items
     };
 }
 

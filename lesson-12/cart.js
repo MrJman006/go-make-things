@@ -3,7 +3,7 @@
 
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showMessage } from "./modules/utils.js";
+import { showMessage, parseUrlProductIds, clearUrlProductIds } from "./modules/utils.js";
 import { notify } from "./modules/notifier.js";
 import { render, store, component } from "./vendors/reef/reef.es.min.js"
 
@@ -37,7 +37,7 @@ function removeItemFromCart(e)
 
     let productId = e.target.getAttribute("data-remove-item");
 
-    cart.removeProduct(productId);
+    cart.remove(productId);
 
     let product = productList.get(productId);
     if(!product)
@@ -79,12 +79,18 @@ async function checkout(e)
     // Body.
     let requestBodyData = {};
     requestBodyData.currency = "usd";
-    requestBodyData.success_url = "http://127.0.0.1:9999/success.html";
-    requestBodyData.cancel_url = "http://127.0.0.1:9999/cart.html";
+
+    let success_url = new URL("http://127.0.0.1:9999/success.html");
+    success_url.searchParams.set("productIds", cart.items());
+    requestBodyData.success_url = success_url.toString();
+   
+    let cancel_url = new URL("http://127.0.0.1:9999/cart.html");
+    cancel_url.searchParams.set("productIds", cart.items());
+    requestBodyData.cancel_url = cancel_url.toString();
 
     let cart_items = [];
 
-    cart.forEachProduct(
+    cart.items().forEach(
         function(productId)
         {
             let product = productList.get(productId);
@@ -128,6 +134,7 @@ async function checkout(e)
     let data = await response.json();
 
     // Redirect to the payment page.
+    cart.removeAll();
     window.location.href = data.url;
 }
 
@@ -140,6 +147,94 @@ function onClick(e)
 ////////////////////////////////
 // Functions
 
+function checkoutListTemplateGenerator()
+{
+    let template = `
+        <div class="label-bar">
+            <p class="label-bar__product-name">Product</p>
+            <p class="label-bar__product-price">Price</p>
+        </div>
+        <div class="line-item-table">
+    `;
+
+    //
+    // Check for an empty cart.
+    //
+
+    if(cart.items().length == 0)
+    {
+        template += `
+            <p>Your cart is empty.</p>
+        `;
+    }
+    else
+    {
+        cart.items().forEach(
+            function(productId)
+            {
+                let product = productList.get(productId);
+                if(!product)
+                {
+                    return;
+                }
+
+                let itemTemplate = `
+                    <div class="line-item">
+                        <div class="line-item__product-detail">
+                            <a href="product.html?id=${product.id}"><img class="line-item__product-image" src="${product.url}" alt="${product.description}"></a>
+                            <p class="line-item__product-name">${product.name}</p>
+                        </div>
+                        <div class="line-item__order-detail">
+                            <p class="line-item__product-price">$${product.price}</p>
+                            <a class="line-item__remove-item-button button" data-remove-item="${product.id}">&#x2716</a>
+                        </div>
+                    </div>
+                `;
+
+                template += itemTemplate;
+            }
+        );
+    }
+
+    template += `
+        </div>
+    `;
+
+    let checkoutTotal = 0;
+
+    cart.items().forEach(
+        function(productId)
+        {
+            let product = productList.get(productId);
+            if(!product)
+            {
+                return;
+            }
+
+            checkoutTotal += product.price;
+        }
+    );
+
+    template += `
+        <div class="total-bar">
+            <p class="total-bar__label">Total:</p>
+            <p class="total-bar__total">$${checkoutTotal}</p>
+            <p class="total-bar__remove-item-spacer"></p>
+        </div>
+    `;
+
+    if(cart.items().length != 0)
+    {
+        template += `
+            <div class="checkout-bar">
+                <a class="checkout-button button primary" data-checkout>Checkout</a>
+            </div>
+        `;
+    }
+
+    return template;
+}
+
 function buildContent()
 {
     let contentElement = document.querySelector("[data-content]");
@@ -151,91 +246,9 @@ function buildContent()
     if(productList.length() == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        buildContent(contentElement, message);
+        showMessage(contentElement, message);
         return;
-    }
-
-    function checkoutListTemplateGenerator()
-    {
-        let template = `
-            <div class="label-bar">
-                <p class="label-bar__product-name">Product</p>
-                <p class="label-bar__product-price">Price</p>
-            </div>
-        `;
-
-        //
-        // Check for an empty cart.
-        //
-    
-        if(cart.productCount() == 0)
-        {
-            template += `
-                <p>Your cart is empty.</p>
-            `;
-        }
-        else
-        {
-            cart.forEachProduct(
-                function(productId)
-                {
-                    let product = productList.get(productId);
-                    if(!product)
-                    {
-                        return;
-                    }
-
-                    let itemTemplate = `
-                        <div class="cart-item">
-                            <div class="cart-item__product-detail">
-                                <a href="product.html?id=${product.id}"><img class="cart-item__product-image" src="${product.url}" alt="${product.description}"></a>
-                                <p class="cart-item__product-name">${product.name}</p>
-                            </div>
-                            <div class="cart-item__order-detail">
-                                <p class="cart-item__product-price">$${product.price}</p>
-                                <a class="cart-item__remove-item-button button" data-remove-item="${product.id}">&#x2716</a>
-                            </div>
-                        </div>
-                    `;
-
-                    template += itemTemplate;
-                }
-            );
-        }
-
-        let checkoutTotal = 0;
-
-        cart.forEachProduct(
-            function(productId)
-            {
-                let product = productList.get(productId);
-                if(!product)
-                {
-                    return;
-                }
-
-                checkoutTotal += product.price;
-            }
-        );
-
-        template += `
-            <div class="total-bar">
-                <p class="total-bar__label">Total:</p>
-                <p class="total-bar__total">$${checkoutTotal}</p>
-            </div>
-        `;
-
-        if(cart.productCount() != 0)
-        {
-            template += `
-                <div class="checkout-bar">
-                    <a class="checkout-button button primary" data-checkout>Checkout</a>
-                </div>
-            `;
-        }
-
-        return template;
-    }
+    } 
 
     component(contentElement, checkoutListTemplateGenerator);
 }
@@ -244,7 +257,7 @@ function buildCart()
 {
     function cartTemplateGenerator()
     {
-        let productCount = cart.productCount();
+        let productCount = cart.items().length;
         let cartTemplate = `
             <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
         `;
@@ -256,6 +269,14 @@ function buildCart()
     component(cartElement, cartTemplateGenerator);
 }
 
+function mergeCanceledCheckoutItems()
+{
+    let productIds = parseUrlProductIds();
+    clearUrlProductIds();
+
+    productIds.forEach((id) => { cart.add(id); });
+}
+
 async function main()
 {
     redirecting = false;
@@ -265,6 +286,8 @@ async function main()
 
     cart = Cart();
     cart.load();
+
+    mergeCanceledCheckoutItems();
 
     buildContent();
     buildCart();

@@ -14,12 +14,13 @@ import { component } from "./vendors/reef/reef.es.min.js";
 ////////////////////////////////
 // Variables
 
-// N/A
+let cart;
+let productList;
 
 ////////////////////////////////
 // Functions
 
-function buildProductGallery(productList, cart)
+function buildProductGallery()
 {
     let contentElement = document.querySelector("[data-content]");
     contentElement.replaceChildren();
@@ -55,11 +56,11 @@ function buildProductGallery(productList, cart)
     productList.forEach(buildProductCard);
 }
 
-function buildCart(cart)
+function buildCart()
 {
     function cartTemplateGenerator()
     {
-        let productCount = cart.productCount();
+        let productCount = cart.items().length;
         let cartTemplate = `
             <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
         `;
@@ -82,14 +83,14 @@ async function main()
 {
     cleanupUrl();
 
-    let productList = ProductList();
+    productList = ProductList();
     await productList.load();
 
-    let cart = Cart();
+    cart = Cart();
     cart.load();
 
-    buildProductGallery(productList, cart);
-    buildCart(cart);
+    buildProductGallery();
+    buildCart();
 }
 
 ////////////////////////////////
