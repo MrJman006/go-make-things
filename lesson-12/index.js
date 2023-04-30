@@ -55,20 +55,25 @@ function buildProductGallery()
     productList.forEach(buildProductCard);
 }
 
-function buildCart()
+function generateCartIconHtml()
 {
-    function cartTemplateGenerator()
-    {
-        let productCount = cart.items().length;
-        let cartTemplate = `
-            <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-        `;
+    let productCount = cart.items().length;
 
-        return cartTemplate;
-    }
+    let cartIconHtml = `
+        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
+    `;
 
-    let cartElement = document.querySelector("[data-cart]");
-    component(cartElement, cartTemplateGenerator);
+    return cartIconHtml;
+}
+
+function buildCartIcon()
+{
+    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+
+    component(
+        cartIconContainer,
+        () =>{ return generateCartIconHtml(); }
+    );
 }
 
 function cleanupUrl()
@@ -89,11 +94,12 @@ async function main()
     cart.load();
 
     buildProductGallery();
-    buildCart();
+
+    buildCartIcon();
 }
 
 ////////////////////////////////
 // Script Entry Point
 
-window.addEventListener("load", (e) => { main(); });
+window.addEventListener("load", main);
 

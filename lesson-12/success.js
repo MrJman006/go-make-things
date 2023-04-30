@@ -21,11 +21,9 @@ let productIds;
 ////////////////////////////////
 // Functions
 
-function buildCheckoutSummary(purchasedProductIds)
+function generateCheckoutSummaryTableHtml(purchasedProductIds)
 {
-    let pageContentContainer = document.querySelector("[data-page-content]");
-
-    let template = `
+    let checkoutSummaryTableHtml = `
         <p class="message">Thank you for shopping with us! Below is a summary of your purchase.</p>
         <div class="label-bar">
             <p class="label-bar__product-name">Product</p>
@@ -55,11 +53,11 @@ function buildCheckoutSummary(purchasedProductIds)
                 </div>
             `;
 
-            template += itemTemplate;
+            checkoutSummaryTableHtml += itemTemplate;
         }
     );
 
-    template += `
+    checkoutSummaryTableHtml += `
         </div>
     `;
 
@@ -78,17 +76,17 @@ function buildCheckoutSummary(purchasedProductIds)
         }
     );
 
-    template += `
+    checkoutSummaryTableHtml += `
         <div class="total-bar">
             <p class="total-bar__label">Total:</p>
             <p class="total-bar__total">$${checkoutTotal}</p>
         </div>
     `;
 
-    render(pageContentContainer, template);
+    return checkoutSummaryTableHtml;
 }
 
-function buildContent()
+function buildCheckoutSummaryTable()
 {
     let pageContentContainer = document.querySelector("[data-page-content]");
 
@@ -100,23 +98,28 @@ function buildContent()
         return;
     }
 
-    buildCheckoutSummary(purchasedProductIds);
+    render(pageContentContainer, generateCheckoutSummaryTableHtml(purchasedProductIds));
 }
 
-function buildCart()
+function generateCartIconHtml()
 {
-    function cartTemplateGenerator()
-    {
-        let productCount = cart.items().length;
-        let cartTemplate = `
-            <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-        `;
+    let productCount = cart.items().length;
 
-        return cartTemplate;
-    }
+    let cartIconHtml = `
+        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
+    `;
 
-    let cartElement = document.querySelector("[data-cart]");
-    component(cartElement, cartTemplateGenerator);
+    return cartIconHtml;
+}
+
+function buildCartIcon()
+{
+    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+
+    component(
+        cartIconContainer,
+        () =>{ return generateCartIconHtml(); }
+    );
 }
 
 async function main()
@@ -127,12 +130,13 @@ async function main()
     cart = Cart();
     cart.load();
 
-    buildContent();
-    buildCart();
+    buildCheckoutSummaryTable();
+
+    buildCartIcon();
 }
 
 ////////////////////////////////
 // Script Entry Point
 
-window.addEventListener("load", (e) => { main(); });
+window.addEventListener("load", main);
 

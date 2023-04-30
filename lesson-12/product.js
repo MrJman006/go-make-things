@@ -4,7 +4,7 @@
 import { ProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
 import { showErrorMessage, showErrorMessageAndRedirect } from "./modules/errors.js";
-import { render, component } from "./vendors/reef/reef.es.min.js"
+import { store, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
 // Constants
@@ -20,6 +20,23 @@ let productList;
 ////////////////////////////////
 // Functions
 
+function handleAddToCartButtonClick(e)
+{
+    let buttonType = e.target.getAttribute("data-button");
+    if(buttonType != "add-to-cart")
+    {
+        return;
+    }
+
+    let productId = e.target.getAttribute("data-product");
+    cart.add(productId);
+}
+
+function onClick(e)
+{
+    handleAddToCartButtonClick(e);
+}
+
 function getProductId()
 {
     let url = new URL(window.location.href);
@@ -27,67 +44,46 @@ function getProductId()
     return id;
 }
 
-function buildProductContent(product)
+function generateProductListingCartDetailsHtml(product)
 {
-    let pageContentContainer = document.querySelector("[data-page-content]");
+    let html = ``;
 
-    // Update the page title.
-    document.title = `${product.name} | ${document.title}`;
-
-    function cartDetailsTemplateGenerator()
+    if(cart.has(product.id))
     {
-        let template;
-
-        if(cart.has(product.id))
-        {
-            template = `
-                <div class="product-listing__cart-details">
-                    <p>This product is in your cart!</p>
-                </div>
-            `;
-        }
-        else
-        {
-            template = `
-                <div class="product-listing__cart-details">
-                    <a class="button primary" data-add-to-cart>Add To Cart</a>
-                </div>
-            `;
-        }
-
-        return template;
-    }
-
-    function templateGenerator()
-    {
-        let template = `
-            <div class="product-listing" aria-live="polite">
-                <img class="product-listing__image" src="${product.url}" alt="${product.description}">
-                <p class="product-listing__title">${product.name}</p>
-                <p class="product-listing__description">${product.description}</p>
-                <p class="product-listing__price">$${product.price}</p>
-                ${cartDetailsTemplateGenerator()}
+        html += `
+            <div class="product-listing__cart-details">
+                <p>This product is in your cart!</p>
             </div>
         `;
-        return template;
-    };
-
-    render(pageContentContainer, templateGenerator());
-
-    function onAddToCartClicked(e)
+    }
+    else
     {
-        cart.add(product.id);
-        render(pageContentContainer, templateGenerator());
+        html = `
+            <div class="product-listing__cart-details">
+                <a class="button primary" data-button="add-to-cart" data-product="${product.id}">Add To Cart</a>
+            </div>
+        `;
     }
 
-    let addToCartButton = document.querySelector("[data-add-to-cart]");
-    addToCartButton?.addEventListener(
-        "click",
-        onAddToCartClicked
-    );
+    return html;
 }
 
-function buildContent()
+function generateProductListingHtml(product)
+{
+    let html = `
+        <div class="product-listing" aria-live="polite">
+            <img class="product-listing__image" src="${product.url}" alt="${product.description}">
+            <p class="product-listing__title">${product.name}</p>
+            <p class="product-listing__description">${product.description}</p>
+            <p class="product-listing__price">$${product.price}</p>
+            ${generateProductListingCartDetailsHtml(product)}
+        </div>
+    `;
+
+    return html;
+}
+
+function buildProductListing()
 {
     let pageContentContainer = document.querySelector("[data-page-content]");
 
@@ -130,23 +126,34 @@ function buildContent()
     // Display the product.
     //
 
-    buildProductContent(product);
+    // Update the page title.
+    document.title = `${product.name} | ${document.title}`; 
+
+    component(
+        pageContentContainer,
+        () => { return generateProductListingHtml(product); }
+    );
 }
 
-function buildCart()
+function generateCartIconHtml()
 {
-    function cartTemplateGenerator()
-    {
-        let productCount = cart.items().length;
-        let cartTemplate = `
-            <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-        `;
+    let productCount = cart.items().length;
 
-        return cartTemplate;
-    }
+    let cartIconHtml = `
+        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
+    `;
 
-    let cartElement = document.querySelector("[data-cart]");
-    component(cartElement, cartTemplateGenerator);
+    return cartIconHtml;
+}
+
+function buildCartIcon()
+{
+    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+
+    component(
+        cartIconContainer,
+        () =>{ return generateCartIconHtml(); }
+    );
 }
 
 async function main()
@@ -157,12 +164,13 @@ async function main()
     cart = Cart();
     cart.load();
 
-    buildContent();
-    buildCart();
+    buildProductListing();
+
+    buildCartIcon();
 }
 
 ////////////////////////////////
 // Script Entry Point
 
-window.addEventListener("load", (e) => { main(); });
-
+window.addEventListener("load", main);
+document.addEventListener("click", onClick);

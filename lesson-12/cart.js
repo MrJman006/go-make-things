@@ -6,7 +6,7 @@ import { Cart } from "./modules/cart.js";
 import { parseUrlProductIds, clearUrlProductIds } from "./modules/utils.js";
 import { showNotification } from "./modules/notifications.js";
 import { showErrorMessage } from "./modules/errors.js";
-import { render, store, component } from "./vendors/reef/reef.es.min.js"
+import { store, component } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
 // Constants
@@ -23,7 +23,7 @@ let redirecting;
 ////////////////////////////////
 // Event Handlers
 
-function removeItemFromCart(e)
+function handleRemoveItemFromCartIconClick(e)
 {
     if(!e.target.hasAttribute("data-remove-item"))
     {
@@ -49,7 +49,7 @@ function removeItemFromCart(e)
     showNotification(`Removed '${product.name}' from the cart.`);
 }
 
-async function checkout(e)
+async function handleCheckoutButtonClick(e)
 {
     if(!e.target.hasAttribute("data-checkout"))
     {
@@ -141,16 +141,16 @@ async function checkout(e)
 
 function onClick(e)
 {
-    removeItemFromCart(e);
-    checkout(e);
+    handleRemoveItemFromCartIconClick(e);
+    handleCheckoutButtonClick(e);
 }
 
 ////////////////////////////////
 // Functions
 
-function checkoutListTemplateGenerator()
+function generateCartItemTableHtml()
 {
-    let template = `
+    let cartItemTableHtml = `
         <div class="label-bar">
             <p class="label-bar__product-name">Product</p>
             <p class="label-bar__product-price">Price</p>
@@ -164,7 +164,7 @@ function checkoutListTemplateGenerator()
 
     if(cart.items().length == 0)
     {
-        template += `
+        cartItemTableHtml += `
             <p>Your cart is empty.</p>
         `;
     }
@@ -192,12 +192,12 @@ function checkoutListTemplateGenerator()
                     </div>
                 `;
 
-                template += itemTemplate;
+                cartItemTableHtml += itemTemplate;
             }
         );
     }
 
-    template += `
+    cartItemTableHtml += `
         </div>
     `;
 
@@ -216,7 +216,7 @@ function checkoutListTemplateGenerator()
         }
     );
 
-    template += `
+    cartItemTableHtml += `
         <div class="total-bar">
             <p class="total-bar__label">Total:</p>
             <p class="total-bar__total">$${checkoutTotal}</p>
@@ -226,17 +226,17 @@ function checkoutListTemplateGenerator()
 
     if(cart.items().length != 0)
     {
-        template += `
+        cartItemTableHtml += `
             <div class="checkout-bar">
                 <a class="checkout-button button primary" data-checkout>Checkout</a>
             </div>
         `;
     }
 
-    return template;
+    return cartItemTableHtml;
 }
 
-function buildContent()
+function buildCartItemTable()
 {
     let pageContentContainer = document.querySelector("[data-page-content]");
 
@@ -251,23 +251,31 @@ function buildContent()
         return;
     } 
 
-    component(pageContentContainer, checkoutListTemplateGenerator);
+    component(
+        pageContentContainer,
+        () => { return generateCartItemTableHtml(); }
+    );
 }
 
-function buildCart()
+function generateCartIconHtml()
 {
-    function cartTemplateGenerator()
-    {
-        let productCount = cart.items().length;
-        let cartTemplate = `
-            <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-        `;
+    let productCount = cart.items().length;
 
-        return cartTemplate;
-    }
+    let cartIconHtml = `
+        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
+    `;
 
-    let cartElement = document.querySelector("[data-cart]");
-    component(cartElement, cartTemplateGenerator);
+    return cartIconHtml;
+}
+
+function buildCartIcon()
+{
+    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+
+    component(
+        cartIconContainer,
+        () =>{ return generateCartIconHtml(); }
+    );
 }
 
 function mergeCanceledCheckoutItems()
@@ -290,13 +298,14 @@ async function main()
 
     mergeCanceledCheckoutItems();
 
-    buildContent();
-    buildCart();
+    buildCartItemTable();
+
+    buildCartIcon();
 }
 
 ////////////////////////////////
 // Script Entry Point
 
-window.addEventListener("load", (e) => { main(); });
+window.addEventListener("load", main);
 document.addEventListener("click", onClick);
 
