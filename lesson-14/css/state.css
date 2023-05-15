@@ -1,0 +1,26 @@
+/*******************************
+* Tags
+**/
+
+a:focus,
+a:hover
+{
+    text-decoration: none;
+}
+
+button.primary:hover,
+input[type="submit"].primary:hover,
+a.button.primary:hover
+{
+    background-color: #004182;
+}
+
+/*******************************
+* Transient State
+**/
+
+.hidden
+{
+    display: none;
+}
+
