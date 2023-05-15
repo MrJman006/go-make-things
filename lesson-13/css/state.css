@@ -8,11 +8,9 @@ a:hover
     text-decoration: none;
 }
 
-/*******************************
-* Button
-**/
-
-.button.primary:hover
+button.primary:hover,
+input[type="submit"].primary:hover,
+a.button.primary:hover
 {
     background-color: #004182;
 }

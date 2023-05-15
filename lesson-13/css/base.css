@@ -18,6 +18,36 @@ footer
     margin-top: 5em;
 }
 
+a.action
+{
+    font-size: 12pt;
+    display: inline-block;
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
+}
+
+button,
+input[type=submit],
+a.button
+{
+    font-size: 12pt;
+    border: none;
+    display: inline-block;
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
+    padding: 0.5em 1em;
+}
+
+button.primary,
+input[type="submit"].primary,
+a.button.primary
+{
+    background-color: #015db9;
+    color: #ffffff;
+}
+
 a
 {
     text-decoration: none;

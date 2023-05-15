@@ -25,7 +25,7 @@ let redirecting;
 
 function handleRemoveItemFromCartIconClick(e)
 {
-    if(!e.target.hasAttribute("data-remove-item"))
+    if(e.target.getAttribute("data-action") != "remove-product")
     {
         return;
     }
@@ -36,9 +36,7 @@ function handleRemoveItemFromCartIconClick(e)
         return;
     }
 
-    let productId = e.target.getAttribute("data-remove-item");
-
-    cart.remove(productId);
+    let productId = e.target.getAttribute("data-product-id");
 
     let product = productList.get(productId);
     if(!product)
@@ -46,12 +44,14 @@ function handleRemoveItemFromCartIconClick(e)
         return;
     }
 
+    cart.remove(productId);
+
     showNotification(`Removed '${product.name}' from the cart.`);
 }
 
 async function handleCheckoutButtonClick(e)
 {
-    if(!e.target.hasAttribute("data-checkout"))
+    if(e.target.getAttribute("data-action") != "checkout")
     {
         return;
     }
@@ -119,25 +119,35 @@ async function handleCheckoutButtonClick(e)
     redirecting = true;
     showNotification(`Redirecting to payment processor...`);
 
-    let response = await fetch(
-        CHECKOUT_ENDPOINT,
-        requestObject
-    );
+    let url;
 
-    if(!response.ok)
+    try
+    {
+        let response = await fetch(
+            CHECKOUT_ENDPOINT,
+            requestObject
+        );
+
+        if(!response.ok)
+        {
+            throw response;
+        }
+
+        // Get the response
+        let data = await response.json();
+        url = data.url;
+    }
+    catch(e)
     {
         showNotification(`Failed to redirect to the payment processor. Please notify the site administrator.`);
         redirecting = false;
         return;
     }
 
-    // Get the response
-    let data = await response.json();
-
     // Redirect to the payment page.
     cart.removeAll();
     history.replaceState(history.state, null, cancel_url.toString());
-    window.location.href = data.url;
+    window.location.href = url;
 }
 
 function onClick(e)
@@ -149,14 +159,15 @@ function onClick(e)
 ////////////////////////////////
 // Functions
 
-function generateCartItemTableHtml()
+function generateCartListHtml()
 {
-    let cartItemTableHtml = `
-        <div class="label-bar">
-            <p class="label-bar__product-name">Product</p>
-            <p class="label-bar__product-price">Price</p>
-        </div>
-        <div class="line-item-table">
+    let cartListHtml = `
+        <div class="cart-list">
+            <div class="label-bar">
+                <p class="product-name">Product</p>
+                <p class="product-price">Price</p>
+            </div>
+            <div class="items">
     `;
 
     //
@@ -165,7 +176,7 @@ function generateCartItemTableHtml()
 
     if(cart.items().length == 0)
     {
-        cartItemTableHtml += `
+        cartListHtml += `
             <p>Your cart is empty.</p>
         `;
     }
@@ -180,25 +191,28 @@ function generateCartItemTableHtml()
                     return;
                 }
 
-                let itemTemplate = `
-                    <div class="line-item">
-                        <div class="line-item__product-detail">
-                            <a href="product.html?id=${product.id}"><img class="line-item__product-image" src="${product.url}" alt="${product.description}"></a>
-                            <p class="line-item__product-name">${product.name}</p>
+                let itemHtml = `
+                    <div class="item">
+                        <div class="product-detail">
+                            <a href="product.html?id=${product.id}">
+                                <img class="product-image" src="${product.url}" alt="${product.description}">
+                                <p class="product-name">${product.name}</p>
+                            </a>
                         </div>
-                        <div class="line-item__order-detail">
-                            <p class="line-item__product-price">$${product.price}</p>
-                            <a class="line-item__remove-item-button button" data-remove-item="${product.id}">&#x2716</a>
+                        <div class="order-detail">
+                            <p class="product-price">$${product.price}</p>
+                            <a class="action" data-action="remove-product" data-product-id="${product.id}">&#x2716</a>
                         </div>
                     </div>
                 `;
 
-                cartItemTableHtml += itemTemplate;
+                cartListHtml += itemHtml;
             }
         );
     }
 
-    cartItemTableHtml += `
+    cartListHtml += `
+            </div>
         </div>
     `;
 
@@ -217,27 +231,27 @@ function generateCartItemTableHtml()
         }
     );
 
-    cartItemTableHtml += `
-        <div class="total-bar">
-            <p class="total-bar__label">Total:</p>
-            <p class="total-bar__total">$${checkoutTotal}</p>
-            <p class="total-bar__remove-item-spacer"></p>
+    cartListHtml += `
+        <div class="cart-total-bar">
+            <p class="label">Total:</p>
+            <p class="value">$${checkoutTotal}</p>
+            <p class="remove-product-action-spacer"></p>
         </div>
     `;
 
     if(cart.items().length != 0)
     {
-        cartItemTableHtml += `
+        cartListHtml += `
             <div class="checkout-bar">
-                <a class="checkout-button button primary" data-checkout>Checkout</a>
+                <a class="button primary" data-action="checkout">Checkout</a>
             </div>
         `;
     }
 
-    return cartItemTableHtml;
+    return cartListHtml;
 }
 
-function buildCartItemTable()
+function buildCartList()
 {
     let pageContentContainer = document.querySelector("[data-page-content]");
 
@@ -254,7 +268,7 @@ function buildCartItemTable()
 
     component(
         pageContentContainer,
-        () => { return generateCartItemTableHtml(); }
+        generateCartListHtml
     );
 }
 
@@ -299,7 +313,7 @@ async function main()
 
     mergeCanceledCheckoutItems();
 
-    buildCartItemTable();
+    buildCartList();
 
     buildCartIcon();
 }

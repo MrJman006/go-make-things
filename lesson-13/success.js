@@ -25,11 +25,12 @@ function generateCheckoutSummaryTableHtml(purchasedProductIds)
 {
     let checkoutSummaryTableHtml = `
         <p class="message">Thank you for shopping with us! Below is a summary of your purchase.</p>
-        <div class="label-bar">
-            <p class="label-bar__product-name">Product</p>
-            <p class="label-bar__product-price">Price</p>
-        </div>
-        <div class="line-item-table">
+        <div class="cart-list">
+            <div class="label-bar">
+                <p class="product-name">Product</p>
+                <p class="product-price">Price</p>
+            </div>
+            <div class="items">
     `;
 
     purchasedProductIds.forEach(
@@ -42,13 +43,15 @@ function generateCheckoutSummaryTableHtml(purchasedProductIds)
             }
 
             let itemTemplate = `
-                <div class="line-item">
-                    <div class="line-item__product-detail">
-                        <a href="product.html?id=${product.id}"><img class="line-item__product-image" src="${product.url}" alt="${product.description}"></a>
-                        <p class="line-item__product-name">${product.name}</p>
+                <div class="item">
+                    <div class="product-detail">
+                        <a href="product.html?id=${product.id}">
+                            <img class="product-image" src="${product.url}" alt="${product.description}">
+                            <p class="product-name">${product.name}</p>
+                        </a>
                     </div>
-                    <div class="line-item__order-detail">
-                        <p class="line-item__product-price">$${product.price}</p>
+                    <div class="order-detail">
+                        <p class="product-price">$${product.price}</p>
                     </div>
                 </div>
             `;
@@ -58,6 +61,7 @@ function generateCheckoutSummaryTableHtml(purchasedProductIds)
     );
 
     checkoutSummaryTableHtml += `
+            </div>
         </div>
     `;
 
@@ -77,9 +81,9 @@ function generateCheckoutSummaryTableHtml(purchasedProductIds)
     );
 
     checkoutSummaryTableHtml += `
-        <div class="total-bar">
-            <p class="total-bar__label">Total:</p>
-            <p class="total-bar__total">$${checkoutTotal}</p>
+        <div class="cart-total-bar">
+            <p class="label">Total:</p>
+            <p class="value">$${checkoutTotal}</p>
         </div>
     `;
 
@@ -94,6 +98,7 @@ function buildCheckoutSummaryTable()
     let purchasedProductIds = parseUrlProductIds();
     if(purchasedProductIds.length == 0)
     {
+        console.log("invalid url.");
         location.replace("index.html");
         return;
     }

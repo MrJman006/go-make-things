@@ -34,11 +34,11 @@ function _generateRedirectMessage(message, delay)
 function showErrorMessageAndRedirect(message, options = {})
 {
     let opts = Object.assign(
-        options,
         {
             redirectDelay: 5,
             redirectTarget: "index.html"
-        }
+        },
+        options
     );
 
     let redirectDelay = opts.redirectDelay;
