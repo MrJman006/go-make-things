@@ -46,17 +46,20 @@ async function handleFormSubmitClick(e)
     // Block page reload.
     e.preventDefault();
 
+    // Only process the login form.
     if(e.target.getAttribute("data-action") != "login")
     {
         return;
     }
 
+    // Prevent multiple submissions.
     if(submitting)
     {
         showNotification("The form is already submitting.");
-        exit;
+        return;
     }
 
+    // Ensure valid form data.
     let form = document.querySelector("[data-form=login]");
     let formData = parseFormData(form);
 
@@ -66,9 +69,17 @@ async function handleFormSubmitClick(e)
         return;
     }
 
-    submitting = true;
+    // Unfocus all form inputs.
+    form.querySelectorAll("input").forEach(
+        function(input)
+        {
+            input.blur();
+        }
+    );
 
+    // Submit the form.
     let token;
+    submitting = true;
 
     try
     {
@@ -103,8 +114,8 @@ async function handleFormSubmitClick(e)
         return;
     }
 
-    showErrorMessage(`Success. Your auth token is ${token}`);
     submitting = false;
+    showErrorMessage(`Success. Your auth token is ${token}`);
 }
 
 function onClick(e)
