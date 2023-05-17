@@ -20,6 +20,46 @@ let sessionToken;
 ////////////////////////////////
 // Functions
 
+async function handleLogoutClick(e)
+{
+    if(e.target.getAttribute("data-action") != "logout")
+    {
+        return;
+    }
+
+    try
+    {
+        let response = await fetch(
+            AUTHORIZATION_ENDPOINT,
+            {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${sessionToken}`
+                }
+            }
+        );
+
+        if(!response.ok)
+        {
+            let message = await response.text();
+            throw message;
+        }
+    }
+    catch(error)
+    {
+        console.warn(error);
+        return;
+    }
+
+    removeToken();
+    location.href = LOGIN_URL;
+}
+
+function onClick(e)
+{
+    handleLogoutClick(e);
+}
+
 function buildDashboard()
 {
     let pageContentContainer = document.querySelector("[data-page-content]");
@@ -32,7 +72,6 @@ function buildDashboard()
 
 async function main()
 {
-    console.log("dashboard");
     sessionToken = getToken();
 
     if(sessionToken === null)
@@ -56,4 +95,4 @@ async function main()
 // Script Entry Point
 
 window.addEventListener("load", main);
-
+window.addEventListener("click", onClick);
