@@ -27,31 +27,21 @@ async function handleLogoutClick(e)
         return;
     }
 
-    try
-    {
-        let response = await fetch(
-            AUTHORIZATION_ENDPOINT,
-            {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${sessionToken}`
-                }
-            }
-        );
-
-        if(!response.ok)
+    // Logout the user.
+    fetch(
+        AUTHORIZATION_ENDPOINT,
         {
-            let message = await response.text();
-            throw message;
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${sessionToken}`
+            }
         }
-    }
-    catch(error)
-    {
-        console.warn(error);
-        return;
-    }
+    );
 
+    // Remove the token.
     removeToken();
+
+    // Redirect.
     location.href = LOGIN_URL;
 }
 
