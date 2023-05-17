@@ -237,7 +237,7 @@ async function handleDELETE(request)
 async function handleGET(request)
 {
     // Get the token
-    let token = new URL(request.url).searchParams.get('token');
+    let token = getCredentials(request);
 
     // If there's no token, return error
     if(token === null)

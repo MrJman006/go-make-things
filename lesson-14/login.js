@@ -3,17 +3,20 @@
 
 import { showErrorMessage } from "./modules/errors.js"
 import { showNotification } from "./modules/notifications.js"
+import { getToken, setToken, removeToken, checkTokenStatus } from "./modules/token.js"
 import { render } from "./vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
 // Constants
 
 let AUTHORIZATION_ENDPOINT = "https://gmtww-auth.cfjcd.workers.dev";
+let DASHBOARD_URL = "http://127.0.0.1:9999/dashboard.html";
 
 ////////////////////////////////
 // Variables
 
 let submitting;
+let sessionToken;
 
 ////////////////////////////////
 // Functions
@@ -77,16 +80,15 @@ async function handleFormSubmitClick(e)
         }
     );
 
-    // Submit the form.
-    let token;
+    // Attempt to login.
     submitting = true;
+
+    let authCredentials = `${formData.username}:${formData.password}`;
+    let encodedAuthCredentials = btoa(authCredentials);
 
     try
     {
-        let authCredentials = `${formData.username}:${formData.password}`;
-        let encodedAuthCredentials = btoa(authCredentials);
-
-        let tokenResponse = await fetch(
+        let response = await fetch(
             AUTHORIZATION_ENDPOINT,
             {
                 method: "POST",
@@ -96,26 +98,27 @@ async function handleFormSubmitClick(e)
             }
         );
 
-        if(!tokenResponse.ok)
+        if(!response.ok)
         {
-            let message = await tokenResponse.text();
+            let message = await response.text();
             throw message;
         }
 
-        let data = await tokenResponse.json();
-        token = data.token;
+        let data = await response.json();
+        sessionToken = data.token;
+        setToken(sessionToken);
     }
     catch(error)
     {
         submitting = false;
         form.reset();
-        console.warn(error);
         showNotification(error);
+        console.warn(error);
         return;
     }
 
-    submitting = false;
-    showErrorMessage(`Success. Your auth token is ${token}`);
+    // Redirect
+    location.href = DASHBOARD_URL;
 }
 
 function onClick(e)
@@ -154,11 +157,28 @@ function buildLoginForm()
     );
 }
 
-function main()
+async function main()
 {
     submitting = false;
 
-    buildLoginForm();
+    sessionToken = getToken();
+
+    if(sessionToken === null)
+    {
+        buildLoginForm();
+        return;
+    }
+
+    let sessionStatus = await checkTokenStatus(sessionToken);
+    if(sessionStatus !== "active")
+    {
+        removeToken();
+        buildLoginForm();
+        return;
+    }
+
+    // redirect.
+    location.href = DASHBOARD_URL;
 }
 
 ////////////////////////////////
