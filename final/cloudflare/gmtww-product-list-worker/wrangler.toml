@@ -1,0 +1,8 @@
+name = "gmtww-product-list"
+compatibility_date = "2023-05-18"
+
+[[kv_namespaces]]
+binding = "GMTWW_STORAGE"
+id = "656489f7ee2f46dfbfb89c2a7bcc343d"
+preview_id = "656489f7ee2f46dfbfb89c2a7bcc343d"
+
