@@ -12,6 +12,17 @@ import {bcrypt} from "../modules/bcrypt.js";
 let API_NAME = "token";
 
 /**
+* Access control headers for the token API.
+*
+* @type {Headers}
+*/
+let TOKEN_API_HEADERS = new Headers({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, DELETE, HEAD, OPTIONS',
+    'Access-Control-Allow-Headers': '*'
+});
+
+/**
 * A token lifefime of two minutes.
 *
 * @type {Number}
@@ -31,17 +42,6 @@ let TWO_WEEK_TOKEN_LIFEFIME_IN_SECONDS = 60 * 60 * 24 * 14;
 * @type {Number}
 */
 let TOKEN_LIFETIME = TWO_MINUTE_TOKEN_LIFEFIME_IN_SECONDS;
-
-/**
-* Access control headers for the token API.
-*
-* @type {Headers}
-*/
-let TOKEN_API_HEADERS = new Headers({
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, DELETE, HEAD, OPTIONS',
-    'Access-Control-Allow-Headers': '*'
-});
 
 /**
 * Create a token. The token is guaranteed to be unique from all other
@@ -83,7 +83,7 @@ async function createToken()
 *
 * @param {Request} request - A request object.
 *
-* @return {Response} - A response object.
+* @return {Promise<Response>} - A response object.
 */
 async function handlePOST(request)
 {
@@ -177,7 +177,7 @@ async function handlePOST(request)
 *
 * @param {Request} request - A request object.
 *
-* @return {Response} - A response object.
+* @return {Promise<Response>} - A response object.
 */
 async function handleDELETE(request)
 {
@@ -226,6 +226,8 @@ async function handleDELETE(request)
 * Handles fetch requests.
 *
 * @param {Request} request - A request object.
+*
+* @return {Promise<Response>} - A response object.
 */
 async function handleRequest(request)
 {

@@ -21,11 +21,11 @@ let TOKEN_API_HEADERS = new Headers({
 });
 
 /**
-* Handles POST requests.
+* Handles GET requests.
 *
 * @param {Request} request - A request object.
 *
-* @return {Response} - A response object.
+* @return {Promise<Response>} - A response object.
 */
 async function handleGET(request)
 {
@@ -52,6 +52,8 @@ async function handleGET(request)
 * Handles fetch requests.
 *
 * @param {Request} request - A request object.
+*
+* @return {Promise<Response>} - A response object.
 */
 async function handleRequest(request)
 {
