@@ -1,4 +1,5 @@
 name = "gmtww-register-user"
+main = "main.js"
 compatibility_date = "2023-05-18"
 
 [[kv_namespaces]]
