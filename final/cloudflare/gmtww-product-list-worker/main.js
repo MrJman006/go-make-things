@@ -14,7 +14,7 @@ let API_NAME = "product-list";
 *
 * @type {Headers}
 */
-let TOKEN_API_HEADERS = new Headers({
+let API_HEADERS = new Headers({
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
     'Access-Control-Allow-Headers': '*'
@@ -41,7 +41,7 @@ async function handleGET(request)
         responseBody,
         {
             status: HTTP_STATUS_CODES.OK,
-            headers: TOKEN_API_HEADERS
+            headers: API_HEADERS
         }
     );
 
@@ -67,7 +67,7 @@ async function handleRequest(request)
 
     if(!originAllowed)
     {
-        response = generateForbiddenOriginResponse(TOKEN_API_HEADERS);
+        response = generateForbiddenOriginResponse(API_HEADERS);
         return response;
     }
 
@@ -81,7 +81,7 @@ async function handleRequest(request)
             "Ok",
             {
                 status: HTTP_STATUS_CODES.OK,
-                headers: TOKEN_API_HEADERS
+                headers: API_HEADERS
             }
         );
 
@@ -102,7 +102,7 @@ async function handleRequest(request)
     // Unsupported methods.
     //
 
-    response = generateUnsupportedHttpMethodResponse(API_NAME, TOKEN_API_HEADERS);
+    response = generateUnsupportedHttpMethodResponse(API_NAME, API_HEADERS);
     return response;
 }
 
