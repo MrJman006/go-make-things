@@ -7,7 +7,7 @@
     "serve:frontend": "python3 -m http.server 9999;",
     "bd:cf-workers": "set -x; npm run build:cf-workers; npm run deploy:cf-workers;",
     "build:cf-workers": "set -x; find cloudflare/ -name \"wrangler.toml\" -exec sh -c 'set -x; S=\"$(dirname \"${1}\")\"; D=\"_${S}\"; npx rollup \"${S}/main.js\" --file \"${D}/main.js\";' tmp-sh '{}' \\;",
-    "deploy:cf-workers": "set -x; find cloudflare/ -name \"wrangler.toml\" -exec sh -c 'set -x; S=\"$(dirname \"${1}\")\"; D=\"_${S}\"; cp \"${S}/wrangler.toml\" \"${D}\"; npx wrangler deploy --config \"${D}/wrangler.toml\"; if [ -f \"${D}/secret-vars.json\" ]; then npx wrangler secret:bulk \"${D}/secret-vars.json\" --config \"${D}/wrangler.toml\"; fi' tmp-sh '{}' \\;",
+    "deploy:cf-workers": "set -x; find cloudflare/ -name \"wrangler.toml\" -exec sh -c 'set -x; S=\"$(dirname \"${1}\")\"; D=\"_${S}\"; cp \"${S}/wrangler.toml\" \"${D}\"; npx wrangler deploy --config \"${D}/wrangler.toml\"; if [ -f \"${S}/_secret-vars.json\" ]; then npx wrangler secret:bulk \"${S}/_secret-vars.json\" --config \"${D}/wrangler.toml\"; fi' tmp-sh '{}' \\;",
     "wrangler:list-kvs": "npx wrangler kv:namespace list"
   },
   "repository": {
