@@ -10,12 +10,3 @@ preview_id = "acc167cec159403bbec7077851aafc5b"
 binding = "GMTWW_TOKENS"
 id = "070c9f95edd64c8e8e3ae9a15cce139c"
 preview_id = "070c9f95edd64c8e8e3ae9a15cce139c"
-
-# [env.production]
-# MY_VARIABLE = "production_value"
-
-# [env.staging]
-# MY_VARIABLE = "staging_value"
-
-# [env.shared]
-# SHARED_VARIABLE = "shared_value"
