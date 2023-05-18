@@ -11,20 +11,3 @@ preview_id = "acc167cec159403bbec7077851aafc5b"
 binding = "GMTWW_TOKENS"
 id = "070c9f95edd64c8e8e3ae9a15cce139c"
 preview_id = "070c9f95edd64c8e8e3ae9a15cce139c"
-
-[vars]
-
-# This worker relies on the following secret vars.
-#
-# - STRIPE_API_KEY: A Stripe API key. The account associated with this key
-# will be the account that all payments are processed through.
-#
-# Use either of the methods below to add the secret vars to the worker once it
-# is deloyed.
-#
-# Add/Update Individual Secret Vars Command
-# echo "<value>" | npx wrangler secret put <key> --config "<worker-config>"
-#
-# Add/Update Multiple Secret Vars Command
-# *All secret key value pairs need to in a JSON file at the top level.
-# npx wrangler secret:bulk "<secret-json-file>" --config "<worker-config>"
