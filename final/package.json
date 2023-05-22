@@ -4,15 +4,9 @@
   "description": "A photo shop, not to be confused with Photoshop ;)",
   "main": "index.js",
   "scripts": {
-    "build": "npm-run-all build:*",
-    "serve": "set -x; [ ! -e _frontend ] && echo \"Build the frontend before attempting to serve it.\" || (cd _frontend; python3 -m http.server 9999;)",
-    "clean": "npm-run-all clean:*",
-    "clean:builds": "set -x; rm -rf _*",
-    "clean:all": "set -x; find -name 'node_modules' -prune -o -name '_*' -exec sh -c 'set -x; rm -rf \"${1}\"' tmp-sh \"{}\" \\;",
-    "build:frontend": "set -x; cd frontend && npx @11ty/eleventy && rsync -aim static/ ../_frontend;",
-    "build:cf-workers": "set -x; find cloudflare/ -name \"wrangler.toml\" -exec sh -c 'set -x; S=\"$(dirname \"${1}\")\"; D=\"_${S}\"; npx esbuild --bundle --tree-shaking=true --legal-comments=inline --target=chrome58,firefox57,safari11 --outfile=\"${D}/main.js\" \"${S}/main.js\";' tmp-sh '{}' \\;",
-    "deploy:cf-workers": "set -x; find cloudflare/ -name \"wrangler.toml\" -exec sh -c 'set -x; S=\"$(dirname \"${1}\")\"; D=\"_${S}\"; cp \"${S}/wrangler.toml\" \"${D}\"; npx wrangler deploy --config \"${D}/wrangler.toml\"; if [ -f \"${S}/_secret-vars.json\" ]; then npx wrangler secret:bulk \"${S}/_secret-vars.json\" --config \"${D}/wrangler.toml\"; fi' tmp-sh '{}' \\;",
-    "wrangler:list-kvs": "set -x; npx wrangler kv:namespace list"
+    "build:cloudflare-workers": "scripts/build-cloudflare-workers.sh",
+    "deploy:cloudflare-workers": "scripts/deploy-cloudflare-workers.sh",
+    "wrangler:list-kvs": "scripts/wrangler-list-kvs.sh"
   },
   "repository": {
     "type": "git",
