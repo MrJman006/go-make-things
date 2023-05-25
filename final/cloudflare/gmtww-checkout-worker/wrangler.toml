@@ -11,7 +11,7 @@ preview_id = "656489f7ee2f46dfbfb89c2a7bcc343d"
 
 # This worker relies on the secret vars listed below.
 #
-# STRIPE_API_KEY
+# Secret Var: STRIPE_API_KEY
 # A Stripe API key. The account associated with this key will be the account
 # that all payments are processed through.
 

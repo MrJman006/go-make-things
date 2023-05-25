@@ -1,10 +1,8 @@
 ////////////////////////////////
 // Imports
 
-import { ProductList } from "./modules/product-list.js";
-import { Cart } from "./modules/cart.js";
-import { showErrorMessage } from "./modules/errors.js";
-import { component } from "./vendors/reef/reef.es.min.js";
+import { bind } from "./modules/bind.js";
+import { getProductList } from "./modules/products.js";
 
 ////////////////////////////////
 // Constants
@@ -22,37 +20,43 @@ let productList;
 
 function buildProductGallery()
 {
-    let pageContentContainer = document.querySelector("[data-page-content]");
+    let container = document.querySelector("[data-page-content]");
 
     //
     // Ensure that products are available.
     //
 
-    if(productList.length() == 0)
+    if(productList.length == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showMessage(message);
+        console.log(message);
         return;
     }
 
     //
     // Build product cards.
-    //    
+    //
 
-    pageContentContainer.classList.add("gallery");
-
-    function buildProductCard(product)
-    {
-        let productElement = `
-            <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card">
-                <img class="product-card__image" src="${product.url}" alt="${product.description}">
-                <p class="product-card__title">${product.name}</p>
+    let galleryTemplate = `
+        <div class="grid">
+            <a
+                tb-each-product="productList"
+                tb-href="'product.html' | urlWithParams 'id' product.id"
+            >
+                <img
+                    tb-src="product.url"
+                    tb-alt="product.description"
+                >
+                <p>{ product.name }</p>
             </a>
-        `;
-        pageContentContainer.innerHTML += productElement;
-    }
+        </div>
+    `;
 
-    productList.forEach(buildProductCard);
+    let data = {
+        productList: productList
+    };
+
+    bind(container, galleryTemplate, data);
 }
 
 function generateCartIconHtml()
@@ -85,17 +89,15 @@ function cleanupUrl()
 
 async function main()
 {
-    cleanupUrl();
+//    cleanupUrl();
 
-    productList = ProductList();
-    await productList.load();
+    productList = await getProductList();
 
-    cart = Cart();
-    cart.load();
+//    cartList = getCartList();
 
     buildProductGallery();
 
-    buildCartIcon();
+//    buildCartIcon();
 }
 
 ////////////////////////////////

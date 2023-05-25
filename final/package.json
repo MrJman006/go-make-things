@@ -4,7 +4,11 @@
   "description": "A photo shop, not to be confused with Photoshop ;)",
   "main": "index.js",
   "scripts": {
+    "build:frontend-site": "scripts/build-frontend-site.sh",
+    "serve:frontend-site": "scripts/serve-frontend-site.sh",
+    "clean:frontend": "rm -rf _frontend;",
     "build:cloudflare-workers": "scripts/build-cloudflare-workers.sh",
+    "clean:cloudflare-workers": "rm -rf _cloudflare;",
     "deploy:cloudflare-workers": "scripts/deploy-cloudflare-workers.sh",
     "wrangler:list-kvs": "scripts/wrangler-list-kvs.sh"
   },
