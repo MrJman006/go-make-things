@@ -4,14 +4,11 @@
         <meta charset="utf-8">
         <title>{{data.siteName}}</title>
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<!--
         <link rel="stylesheet" href="css/reset.css">
         <link rel="stylesheet" href="css/base.css">
-        <link rel="stylesheet" href="css/layout.css">
         <link rel="stylesheet" href="css/modules.css">
         <link rel="stylesheet" href="css/state.css">
         <link rel="stylesheet" href="css/utility.css">
--->
     </head>
     <body>
         <div class="page" data-page>
@@ -22,7 +19,7 @@
                 </div>
             </nav>
 
-            {% block pageTitle %}{% endblock %}
+                {% block pageTitle %}{% endblock %}
 
             <div data-page-content>
                 <noscript>This site requires Javascript to run properly. Please enable Javascript and reload the page.</noscript>
@@ -36,6 +33,6 @@
             </footer>
         </div>
 
-        {% block pageScripts %}{% endblock %}
+            {% block pageScripts %}{% endblock %}
     </body>
 </html>

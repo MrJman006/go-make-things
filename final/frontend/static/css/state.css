@@ -1,0 +1,19 @@
+/*******************************
+* Tags
+**/
+
+a:focus,
+a:hover
+{
+    text-decoration: none;
+}
+
+/*******************************
+* Transient State
+**/
+
+.hidden
+{
+    display: none;
+}
+

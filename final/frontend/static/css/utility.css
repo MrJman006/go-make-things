@@ -1,0 +1,80 @@
+.text-right
+{
+    text-align: right;
+}
+
+.text-center
+{
+    text-align: center;
+}
+
+.margin-top
+{
+    margin-top: 1em;
+}
+
+.margin-top-small
+{
+    margin-top: 0.5em;
+}
+
+.margin-top-xsmall
+{
+    margin-top: 0.25em;
+}
+
+.margin-bottom
+{
+    margin-bottom: 1em;
+}
+
+.font-size-large
+{
+    font-size: 16pt;
+}
+
+.font-color-default
+{
+    color: black;
+}
+
+.img-fit-cover
+{
+    object-fit: cover;
+}
+
+.img-thumb-height
+{
+    height: 8em;
+}
+
+.img-thumb-width
+{
+    width: 100%;
+}
+
+
+/*******************************
+* Product Card
+**/
+
+/**
+.product-card
+{
+    color: black;
+    text-align: center;
+}
+
+.product-card__image
+{
+    width: 100%;
+    height: 8em;
+    object-fit: cover;
+}
+
+.product-card__title
+{
+    margin-top: 0.25em;
+    font-size: 16pt;
+}
+**/

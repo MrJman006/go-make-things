@@ -42,12 +42,16 @@ function buildProductGallery()
             <a
                 tb-each-product="productList"
                 tb-href="'product.html' | urlWithParams 'id' product.id"
+                class="text-center"
             >
                 <img
                     tb-src="product.url"
                     tb-alt="product.description"
+                    class="img-thumb-width img-thumb-height img-fit-cover"
                 >
-                <p>{ product.name }</p>
+                <p
+                    class="margin-top-xxsmall font-size-large font-color-default"
+                >{ product.name }</p>
             </a>
         </div>
     `;
