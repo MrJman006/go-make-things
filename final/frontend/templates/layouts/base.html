@@ -5,6 +5,7 @@
         <title>{{data.siteName}}</title>
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
         <link rel="stylesheet" href="css/reset.css">
+        <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/base.css">
         <link rel="stylesheet" href="css/modules.css">
         <link rel="stylesheet" href="css/state.css">
@@ -13,9 +14,9 @@
     <body>
         <div class="page" data-page>
             <nav>
-                <a href="index.html"><strong>{{data.siteName}}</strong></a>
-                <div>
-                    <a href="cart.html" aria-current="page" data-action="cart-icon"></a>
+                <a class="action" href="index.html"><strong>{{data.siteName}}</strong></a>
+                <div class="action-bar action-bar--justify-right">
+                    <a class="action" href="cart.html" aria-current="page" data-action="show-cart"></a>
                 </div>
             </nav>
 

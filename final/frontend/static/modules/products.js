@@ -4,45 +4,51 @@ let _PRODUCTS_ENDPOINT = "https://gmtww-product-list.cfjcd.workers.dev";
 
 let _CACHE_ID = "productList";
 
-async function getProductList()
+async function getProducts()
 {
-    let productList;
+    let _productList = Storage.session.getItem(_CACHE_ID);
 
-    if(Storage.session.hasItem(_CACHE_ID))
+    if(_productList)
     {
-        console.log("Loading product list from the session cache.");
-        productList = Storage.session.getItem(_CACHE_ID);
-        return productList;
+        console.log("Loaded product list from the session cache.");
+        return _productList;
     }
+    
+    console.log("Fetching product list from the server.");
 
     try
     {
-        console.log("Fetching product list from the server.");
+        let response = await fetch(
+            _PRODUCTS_ENDPOINT,
+            {
+                method: "GET"
+            }
+        );
 
-        let result = await fetch(_PRODUCTS_ENDPOINT);
-
-        if(!result.ok)
+        if(!response.ok)
         {
-            let message = await result.text();
-            throw message;
+            let message = await response.text();
+
+            throw new Error(message);
         }
-   
-        productList = await result.json();
+
+        _productList = await response.json();
 
         console.log("Saving product list to the session cache.");
-        Storage.session.setItem(_CACHE_ID, productList);
+        Storage.session.setItem(_CACHE_ID, _productList);
+
+        return _productList;
     }
     catch(error)
     {
-        console.error(error);
-
-        productList = [];
+        console.warn(error);
+    
+        _productList = [];
+        return _productList;
     }
-
-    return productList;
 }
 
 export {
-    getProductList
+    getProducts
 };
 

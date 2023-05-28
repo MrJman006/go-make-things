@@ -1,66 +1,47 @@
-////////////////////////////////
-// Imports
-
 import { bind } from "./modules/bind.js";
-import { getProductList } from "./modules/products.js";
+import { getProducts } from "./modules/products.js";
+import { getCartItems } from "./modules/cart.js";
 
-////////////////////////////////
-// Constants
-
-// N/A
-
-////////////////////////////////
-// Variables
-
-let cart;
-let productList;
-
-////////////////////////////////
-// Functions
-
-function buildProductGallery()
+function buildProductGallery(products)
 {
     let container = document.querySelector("[data-page-content]");
 
-    //
-    // Ensure that products are available.
-    //
+    let template;
 
-    if(productList.length == 0)
+    if(products.length == 0)
     {
-        let message = "There are no photos available at this time. Please check back later.";
-        console.log(message);
-        return;
+        template = `
+            <p class="message">There are no products available at this time. Please check back later.</p>
+        `;
+    }
+    else
+    {
+        template = `
+            <div class="grid">
+                <a
+                    tb-each-product="products"
+                    tb-href="'product.html' | urlWithParams 'id' product.id"
+                    class="text-center"
+                >
+                    <img
+                        tb-src="product.url"
+                        tb-alt="product.description"
+                        class="img-thumb-width img-thumb-height img-fit-cover"
+                    >
+                    <p
+                        class="margin-top-xxsmall font-size-large font-color-default"
+                    >{ product.name }</p>
+                </a>
+            </div>
+        `;
     }
 
-    //
-    // Build product cards.
-    //
-
-    let galleryTemplate = `
-        <div class="grid">
-            <a
-                tb-each-product="productList"
-                tb-href="'product.html' | urlWithParams 'id' product.id"
-                class="text-center"
-            >
-                <img
-                    tb-src="product.url"
-                    tb-alt="product.description"
-                    class="img-thumb-width img-thumb-height img-fit-cover"
-                >
-                <p
-                    class="margin-top-xxsmall font-size-large font-color-default"
-                >{ product.name }</p>
-            </a>
-        </div>
-    `;
-
     let data = {
-        productList: productList
+        products: products
     };
 
-    bind(container, galleryTemplate, data);
+console.log(data);
+    bind(container, template, data);
 }
 
 function generateCartIconHtml()
@@ -68,20 +49,24 @@ function generateCartIconHtml()
     let productCount = cart.items().length;
 
     let cartIconHtml = `
-        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
     `;
 
     return cartIconHtml;
 }
 
-function buildCartIcon()
+function buildCartAction(cartItems)
 {
-    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+    let cartAction = document.querySelector("[data-action='show-cart']");
 
-    component(
-        cartIconContainer,
-        () =>{ return generateCartIconHtml(); }
-    );
+    let template = `
+        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>{ cartItems.length }</span>
+    `;
+
+    let data = {
+        cartItems: cartItems
+    };
+
+    bind(cartAction, template, data);
 }
 
 function cleanupUrl()
@@ -95,17 +80,16 @@ async function main()
 {
 //    cleanupUrl();
 
-    productList = await getProductList();
+    let products = await getProducts();
+console.log(products);
 
-//    cartList = getCartList();
+    let cartItems = getCartItems();
+console.log(cartItems);
 
-    buildProductGallery();
+    buildProductGallery(products);
 
-//    buildCartIcon();
+    buildCartAction(cartItems);
 }
-
-////////////////////////////////
-// Script Entry Point
 
 window.addEventListener("load", main);
 
