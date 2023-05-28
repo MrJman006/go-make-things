@@ -40,19 +40,9 @@ function buildProductGallery(products)
         products: products
     };
 
-console.log(data);
     bind(container, template, data);
 }
 
-function generateCartIconHtml()
-{
-    let productCount = cart.items().length;
-
-    let cartIconHtml = `
-    `;
-
-    return cartIconHtml;
-}
 
 function buildCartAction(cartItems)
 {
@@ -69,22 +59,11 @@ function buildCartAction(cartItems)
     bind(cartAction, template, data);
 }
 
-function cleanupUrl()
-{
-    let regex = new RegExp("/index.html$");
-    let cleanUrl = location.href.replace(regex, "/")
-    history.replaceState(history.state, null, cleanUrl);
-}
-
 async function main()
 {
-//    cleanupUrl();
-
     let products = await getProducts();
-console.log(products);
 
     let cartItems = getCartItems();
-console.log(cartItems);
 
     buildProductGallery(products);
 
