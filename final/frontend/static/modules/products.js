@@ -1,16 +1,16 @@
-import { Storage } from "./storage.js"
+import { storage } from "./storage.js"
 
 let _PRODUCTS_ENDPOINT = "https://gmtww-product-list.cfjcd.workers.dev";
 
-let _CACHE_ID = "productList";
+let _STORAGE_ID = "productList";
 
 async function getProducts()
 {
-    let _productList = Storage.session.getItem(_CACHE_ID);
+    let _productList = storage.session.getItem(_STORAGE_ID);
 
     if(_productList)
     {
-        console.log("Loaded product list from the session cache.");
+        console.log("Loaded product list from session storage.");
         return _productList;
     }
     
@@ -34,8 +34,8 @@ async function getProducts()
 
         _productList = await response.json();
 
-        console.log("Saving product list to the session cache.");
-        Storage.session.setItem(_CACHE_ID, _productList);
+        console.log("Saving product list to session storage.");
+        storage.session.setItem(_STORAGE_ID, _productList);
 
         return _productList;
     }

@@ -22,7 +22,7 @@ let _StorageActions = function(storage)
         storage.removeItem(key);
     }
 
-    function removeAllItems()
+    function clear()
     {
         storage.clear();
     }
@@ -31,22 +31,20 @@ let _StorageActions = function(storage)
         setItem: setItem,
         getItem: getItem,
         removeItem: removeItem,
-        removeAllItems: removeAllItems
+        clear: clear
     };
 };
 
-let SessionStorage = _StorageActions(sessionStorage);
+let _sessionStorage = _StorageActions(sessionStorage);
 
-let LocalStorage = _StorageActions(localStorage);
+let _siteStorage = _StorageActions(localStorage);
 
-let Storage = {
-    session: SessionStorage,
-    local: LocalStorage
+let storage = {
+    session: _sessionStorage,
+    site: _siteStorage
 };
 
 export {
-    LocalStorage,
-    SessionStorage,
-    Storage
+    storage
 };
 

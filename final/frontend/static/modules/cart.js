@@ -1,28 +1,80 @@
-import { Storage } from "./storage.js"
-    
-let _CACHE_ID = "cartItems";
+import { store } from "../vendors/reef/reef.js";
+import { storage } from "./storage.js";
 
-function getCartItems()
+let _STORAGE_ID = "cart";
+
+function Cart()
 {
-    let cartItems = Storage.local.getItem(_CACHE_ID);
-
-    if(cartItems)
+    let _cart;
+   
+    function addProduct(productId)
     {
-        console.log("Loaded cart from the site cache.");
-        return cartItems;
+        if(_cart.includes(productId))
+        {
+            return;
+        }
+
+        console.log("Adding product to the cart.");
+        _cart.push(productId);
+        storage.site.setItem(_STORAGE_ID, _cart);
     }
 
-    cartItems = [];
-    return cartItems;
-};
+    function removeProduct(productId)
+    {
+        if(!_cart.includes(productId))
+        {
+            return;
+        }
 
-function saveCartItems(cartItems)
-{
-    Storage.local.setItem(_CACHE_ID, cartItems);
+        console.log("Removing product from the cart.");
+        _cart.splice(_cart.indexOf(productId), 1);
+        storage.site.setItem(_STORAGE_ID, _cart);
+    }
+
+    function removeAllProducts()
+    {
+        storage.site.removeItem(_STORAGE_ID);
+        _cart.splice(0, _cart.length);
+    }
+    
+    function hasProduct(productId)
+    {
+        return _cart.includes(productId);
+    }
+
+    function productList()
+    {
+        return [..._cart];
+    }
+
+    function init()
+    {
+        _cart = storage.site.getItem(_STORAGE_ID);
+
+        if(_cart)
+        {
+            console.log("Loaded cart from site storage.");
+        }
+        else
+        {
+            _cart = [];
+        }
+
+        _cart = store(_cart);
+    }
+
+    init();
+
+    return {
+        addProduct,
+        removeProduct,
+        removeAllProducts,
+        hasProduct,
+        productList
+    };
 }
 
 export {
-    getCartItems,
-    saveCartItems
+    Cart
 };
 

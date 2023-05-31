@@ -1,73 +1,103 @@
-import { bind } from "./modules/bind.js";
+import { render, component } from "./vendors/reef/reef.js";
 import { getProducts } from "./modules/products.js";
-import { getCartItems } from "./modules/cart.js";
+import { Cart } from "./modules/cart.js";
+
+function generateNoProductsHtml()
+{
+    let html = `
+        <p class="message">There are no products available at this time. Please check back later.</p>
+    `;
+
+    return html;
+}
+
+function generateProductGalleryHtml(products)
+{
+    let galleryItemsHtml = "";
+
+    products.forEach(
+        function(product)
+        {
+            let params = new URLSearchParams();
+            params.set("id", product.id);
+
+            let productLink = `product.html?${params.toString()}`;
+
+            galleryItemsHtml += `
+                <a
+                    href="${productLink}"
+                    class="text-center"
+                >
+                    <img
+                        src="${product.url}"
+                        alt="${product.description}"
+                        class="img-thumb-width img-thumb-height img-fit-cover"
+                    >
+                    <p
+                        class="margin-top-xxsmall font-size-large font-color-default"
+                    >${product.name}</p>
+                </a>
+            `;
+        }
+    );
+
+    let html = `
+        <div class="grid">
+            ${galleryItemsHtml}
+        </div>
+    `;
+
+    return html;
+}
 
 function buildProductGallery(products)
 {
     let container = document.querySelector("[data-page-content]");
 
-    let template;
+    let html;
 
     if(products.length == 0)
     {
-        template = `
-            <p class="message">There are no products available at this time. Please check back later.</p>
-        `;
+        html = generateNoProductsHtml();
     }
     else
     {
-        template = `
-            <div class="grid">
-                <a
-                    tb-each-product="products"
-                    tb-href="'product.html' | urlWithParams 'id' product.id"
-                    class="text-center"
-                >
-                    <img
-                        tb-src="product.url"
-                        tb-alt="product.description"
-                        class="img-thumb-width img-thumb-height img-fit-cover"
-                    >
-                    <p
-                        class="margin-top-xxsmall font-size-large font-color-default"
-                    >{ product.name }</p>
-                </a>
-            </div>
-        `;
+        html = generateProductGalleryHtml(products); 
     }
 
-    let data = {
-        products: products
-    };
-
-    bind(container, template, data);
+    render(container, html);
 }
 
-
-function buildCartAction(cartItems)
+function generateCartActionHtml(cart)
 {
-    let cartAction = document.querySelector("[data-action='show-cart']");
+    let productCount = cart.productList().length;
 
-    let template = `
-        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>{ cartItems.length }</span>
+    let html = `
+        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
     `;
 
-    let data = {
-        cartItems: cartItems
-    };
+    return html;
+}
 
-    bind(cartAction, template, data);
+function buildCartAction(cart)
+{
+    let container = document.querySelector("[data-action='show-cart']");
+
+    component(
+        container,
+        ()=>{ return generateCartActionHtml(cart); }
+    );
 }
 
 async function main()
 {
     let products = await getProducts();
 
-    let cartItems = getCartItems();
+    let cart = Cart();
 
     buildProductGallery(products);
 
-    buildCartAction(cartItems);
+    buildCartAction(cart);
 }
 
 window.addEventListener("load", main);
