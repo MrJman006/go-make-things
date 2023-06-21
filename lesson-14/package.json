@@ -1,15 +1,24 @@
 {
   "name": "photo-shop",
   "version": "1.0.0",
-  "description": "A website for photo shopping.",
+  "description": "A photo shop, not to be confused with Photoshop ;)",
   "main": "index.js",
   "scripts": {
-    "serve": "python3 -m http.server 9999;"
+    "build:frontend": "scripts/build-frontend-site.sh",
+    "serve:frontend": "scripts/serve-frontend-site.sh",
+    "clean:frontend": "rm -rf _frontend;",
+    "build:cloudflare-workers": "scripts/build-cloudflare-workers.sh",
+    "clean:cloudflare-workers": "rm -rf _cloudflare;",
+    "deploy:cloudflare-workers": "scripts/deploy-cloudflare-workers.sh",
+    "wrangler:list-kvs": "scripts/wrangler-list-kvs.sh"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:MrJman006/gmt-webapps-workshop.git"
   },
   "author": "Joey C. DiGiorgio",
-  "license": "UNLICENSED"
+  "devDependencies": {
+    "esbuild": "0.17.19",
+    "wrangler": "^3.0.0"
+  }
 }
