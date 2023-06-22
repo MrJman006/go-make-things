@@ -7,9 +7,9 @@
     "build:frontend": "scripts/build-frontend-site.sh",
     "serve:frontend": "scripts/serve-frontend-site.sh",
     "clean:frontend": "rm -rf _frontend;",
-    "build:cloudflare-workers": "scripts/build-cloudflare-workers.sh",
+    "build:cloudflare-workers": "scripts/build-all-cloudflare-workers.sh",
     "clean:cloudflare-workers": "rm -rf _cloudflare;",
-    "deploy:cloudflare-workers": "scripts/deploy-cloudflare-workers.sh",
+    "deploy:cloudflare-workers": "scripts/deploy-all-cloudflare-workers.sh",
     "wrangler:list-kvs": "scripts/wrangler-list-kvs.sh"
   },
   "repository": {
