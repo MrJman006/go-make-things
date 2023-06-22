@@ -223,6 +223,8 @@ function populateKvs()
 {
     local KV_NAME
     local KV_ID
+    local KEY
+    local VALUE
 
     local DEPLOYED_KV_NAMESPACES="$(npx wrangler kv:namespace list)"
 
@@ -238,7 +240,11 @@ function populateKvs()
     local KV_DEPLOYED_INDEX=$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"title\":" | grep -n "\"title\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep "${KV_NAME}" | cut -d ":" -f 1)
     local KV_DEPLOYED_ID="$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"id\":" | grep -n "\"id\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep -P "^${KV_DEPLOYED_INDEX}" | cut -d ":" -f 2)"
 
-    npx wrangler kv:key put --namespace-id="${KV_DEPLOYED_ID}" "productList" "${PRODUCT_LIST}"
+    KEY="productList"
+    VALUE="${PRODUCT_LIST}"
+
+    echo "key: ${KEY}"
+    npx wrangler kv:key put --namespace-id="${KV_DEPLOYED_ID}" "${KEY}" "${VALUE}" 1>/dev/null
 
     echo "========"
 }
