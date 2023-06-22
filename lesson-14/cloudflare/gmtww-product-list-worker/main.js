@@ -35,7 +35,9 @@ async function handleGET(request)
     // Return the product list.
     //
 
-    let responseBody = await GMTWW_STORAGE.get("products");
+    let data = await GMTWW_STORAGE.get("productList");
+
+    let responseBody = data;
 
     response = new Response(
         responseBody,

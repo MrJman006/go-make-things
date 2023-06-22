@@ -1,18 +1,15 @@
-////////////////////////////////
-// Objects
-
-let LocalStorage = (function()
+let _StorageActions = function(storage)
 {
-    function set(key, value)
+    function setItem(key, value)
     {
         let intermediate = JSON.stringify(value);
-        localStorage.setItem(key, intermediate);
+        storage.setItem(key, intermediate);
     }
 
-    function get(key)
+    function getItem(key)
     {
         let value = null;
-        let intermediate = localStorage.getItem(key);
+        let intermediate = storage.getItem(key);
         if(intermediate)
         {
             value = JSON.parse(intermediate);
@@ -20,96 +17,34 @@ let LocalStorage = (function()
         return value;
     }
 
-    function has(key)
+    function removeItem(key)
     {
-        let intermediate = localStorage.getItem(key);
-        if(intermediate)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    function remove(key)
-    {
-        localStorage.removeItem(key);
+        storage.removeItem(key);
     }
 
     function clear()
     {
-        localStorage.clear();
+        storage.clear();
     }
 
     return {
-        "setItem": set,
-        "getItem": get,
-        "hasItem": has,
-        "removeItem": remove,
-        "clearAll": clear
+        setItem: setItem,
+        getItem: getItem,
+        removeItem: removeItem,
+        clear: clear
     };
-})();
-
-let SessionStorage = (function()
-{
-    function set(key, value)
-    {
-        let intermediate = JSON.stringify(value);
-        sessionStorage.setItem(key, intermediate);
-    }
-
-    function get(key)
-    {
-        let value = null;
-        let intermediate = sessionStorage.getItem(key);
-        if(intermediate)
-        {
-            value = JSON.parse(intermediate);
-        }
-        return value;
-    }
-
-    function has(key)
-    {
-        let intermediate = sessionStorage.getItem(key);
-        if(intermediate)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    function remove(key)
-    {
-        sessionStorage.removeItem(key);
-    }
-
-    function clear()
-    {
-        sessionStorage.clear();
-    }
-
-    return {
-        "setItem": set,
-        "getItem": get,
-        "hasItem": has,
-        "removeItem": remove,
-        "clearAll": clear
-    };
-})();
-
-let Storage = {
-    "session": SessionStorage,
-    "local": LocalStorage
 };
 
-////////////////////////////////
-// Exports
+let _sessionStorage = _StorageActions(sessionStorage);
+
+let _siteStorage = _StorageActions(localStorage);
+
+let storage = {
+    session: _sessionStorage,
+    site: _siteStorage
+};
 
 export {
-    LocalStorage,
-    SessionStorage,
-    Storage
+    storage
 };
 

@@ -3,9 +3,9 @@
 #
 # This worker relies on the following key value namespaces.
 #
-# KV Name: kv_gmtww_l14_products
-# KV Binding: GMTWW_PRODUCTS
-# KV Description: This KV is used to hold all of the product data.
+# KV Name: kv_gmtww_l14_storage
+# KV Binding: GMTWW_STORAGE
+# KV Description: This KV is used to hold data for API.
 ####
 
 name = "gmtww-api-l14-product-list"

@@ -1,7 +1,7 @@
 import {HTTP_STATUS_CODES} from "../modules/http-status-codes.js";
-import {hasAllowedOrigin, generateForbiddenOriginResponse} from "../modules/origin-access-control.js";
-import {generateUnsupportedHttpMethodResponse} from "../modules/http-methods.js";
-import {parseAuthorizationCredentials, BearerCredentials, BasicCredentials} from "../modules/authorization-headers.js";
+import {hasAllowedOrigin, generateForbiddenOriginResponse} from "../modules/http-origin-access-control.js";
+import {generateUnsupportedHttpMethodResponse} from "../modules/unsupported-http-methods.js";
+import {parseAuthorizationCredentials, BearerCredentials, BasicCredentials} from "../modules/http-authorization-headers.js";
 import {bcrypt} from "../modules/bcrypt.js";
 
 /**

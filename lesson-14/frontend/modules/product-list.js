@@ -1,87 +1,54 @@
-////////////////////////////////
-// Imports
+import { storage } from "./storage.js"
 
-import { Storage } from "./storage.js"
+let _PRODUCTS_ENDPOINT = "https://gmtww-api-l14-product-list.cfjcd.workers.dev";
 
-////////////////////////////////
-// Products API
+let _STORAGE_ID = "productList";
 
-function ProductList()
+async function fetchProductList()
 {
-    let _PRODUCTS_ENDPOINT = "https://gmtww-products.cfjcd.workers.dev";
-    let _CACHE_ID = "productList";
-    let _productList = [];
+    let _productList = storage.session.getItem(_STORAGE_ID);
 
-    async function load()
+    if(_productList)
     {
-        if(Storage.session.hasItem(_CACHE_ID))
-        {
-            console.log("Loading product list from the session cache.");
-            _productList = Storage.session.getItem(_CACHE_ID);
-            return;
-        }
+        console.log("Loaded product list from session storage.");
+        return _productList;
+    }
     
-        try
-        {
-            console.log("Fetching product list from the server.");
+    console.log("Fetching product list from the server.");
 
-            let result = await fetch(_PRODUCTS_ENDPOINT);
-
-            if(!result.ok)
+    try
+    {
+        let response = await fetch(
+            _PRODUCTS_ENDPOINT,
             {
-                throw result.status;
+                method: "GET"
             }
-        
-            _productList = await result.json();
+        );
 
-            console.log("Saving product list to the session cache.");
-            Storage.session.setItem(_CACHE_ID, _productList);
-
-            return;
-        }
-        catch(error)
+        if(!response.ok)
         {
-            console.warn(error);
-    
-            _productList = [];
-            return;
+            let message = await response.text();
+
+            throw new Error(message);
         }
-    }
 
-    function length()
+        _productList = await response.json();
+
+        console.log("Saving product list to session storage.");
+        storage.session.setItem(_STORAGE_ID, _productList);
+
+        return _productList;
+    }
+    catch(error)
     {
-        return _productList.length;
+        console.warn(error);
+    
+        _productList = [];
+        return _productList;
     }
-
-    function forEach(callback)
-    {
-        _productList.forEach(callback);
-    }
-
-    function get(productId)
-    {
-        return _productList.find(function(p){ return p.id == productId; });
-    }
-
-    function includes(productId)
-    {
-        let product = _productList.find(function(p){ return p.id == productId; });
-        return (product) ? true : false;
-    }
-
-    return {
-        load,
-        length,
-        forEach,
-        get,
-        includes
-    };
 }
 
-////////////////////////////////
-// Exports
-
 export {
-    ProductList
+    fetchProductList
 };
 

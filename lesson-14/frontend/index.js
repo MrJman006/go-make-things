@@ -1,37 +1,22 @@
-////////////////////////////////
-// Imports
-
-import { ProductList } from "./modules/product-list.js";
+import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showErrorMessage } from "./modules/errors.js";
+import { showPageContentErrorMessage } from "./modules/errors.js";
 import { component } from "./vendors/reef/reef.es.min.js";
 
-////////////////////////////////
-// Constants
-
-// N/A
-
-////////////////////////////////
-// Variables
-
-let cart;
-let productList;
-
-////////////////////////////////
-// Functions
-
-function buildProductGallery()
+function buildProductGallery(appState)
 {
+    let {productList, cart} = appState;
+
     let pageContentContainer = document.querySelector("[data-page-content]");
 
     //
     // Ensure that products are available.
     //
 
-    if(productList.length() == 0)
+    if(productList.length == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showMessage(message);
+        showPageContentErrorMessage(message);
         return;
     }
 
@@ -55,7 +40,7 @@ function buildProductGallery()
     productList.forEach(buildProductCard);
 }
 
-function generateCartIconHtml()
+function generateCartIconHtml(cart)
 {
     let productCount = cart.items().length;
 
@@ -66,40 +51,38 @@ function generateCartIconHtml()
     return cartIconHtml;
 }
 
-function buildCartIcon()
+function buildCartIcon(cart)
 {
     let cartIconContainer = document.querySelector("[data-cart-icon-container]");
 
     component(
         cartIconContainer,
-        () =>{ return generateCartIconHtml(); }
+        () =>{ return generateCartIconHtml(cart); }
     );
 }
 
-function cleanupUrl()
+function cleanUpUrl()
 {
     let regex = new RegExp("/index.html$");
-    let cleanUrl = location.href.replace(regex, "/")
-    history.replaceState(history.state, null, cleanUrl);
+    let url = location.href.replace(regex, "/")
+    history.replaceState(history.state, null, url);
 }
 
 async function main()
 {
-    cleanupUrl();
+    cleanUpUrl();
 
-    productList = ProductList();
-    await productList.load();
+    let appState = {};
 
-    cart = Cart();
-    cart.load();
+    appState.productList = await fetchProductList();
 
-    buildProductGallery();
+    appState.cart = Cart();
+    appState.cart.load();
 
-    buildCartIcon();
+    buildProductGallery(appState);
+
+    buildCartIcon(appState.cart);
 }
-
-////////////////////////////////
-// Script Entry Point
 
 window.addEventListener("load", main);
 

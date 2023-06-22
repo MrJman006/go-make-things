@@ -1,7 +1,7 @@
 ////////////////////////////////
 // Imports
 
-import { Storage } from "./storage.js"
+import { storage } from "./storage.js"
 import { store } from "../vendors/reef/reef.es.min.js"
 
 ////////////////////////////////
@@ -15,7 +15,7 @@ function Cart()
     function load()
     {
         console.log("Loading cart from the site cache.");
-        _cart = store(Storage.local.getItem(_CACHE_ID) || []);
+        _cart = store(storage.site.getItem(_CACHE_ID) || []);
     }
     
     function add(productId)
@@ -27,7 +27,7 @@ function Cart()
 
         console.log("Adding product to the cart.");
         _cart.push(productId);
-        Storage.local.setItem(_CACHE_ID, _cart);
+        storage.site.setItem(_CACHE_ID, _cart);
     }
 
     function remove(productId)
@@ -39,12 +39,12 @@ function Cart()
 
         console.log("Removing product from the cart.");
         _cart.splice(_cart.indexOf(productId), 1);
-        Storage.local.setItem(_CACHE_ID, _cart);
+        storage.site.setItem(_CACHE_ID, _cart);
     }
 
     function removeAll()
     {
-        Storage.local.removeItem(_CACHE_ID);
+        storage.site.removeItem(_CACHE_ID);
         load();
     }
     
