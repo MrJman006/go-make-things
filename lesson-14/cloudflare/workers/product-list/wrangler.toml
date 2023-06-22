@@ -8,6 +8,6 @@
 # KV Description: This KV is used to hold data for the API.
 ####
 
-name = "api-product-list"
+name = "product-list"
 main = "main.js"
 compatibility_date = "2023-05-18"

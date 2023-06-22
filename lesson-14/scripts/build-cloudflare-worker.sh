@@ -11,21 +11,20 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
         @{SCRIPT_NAME}
 
     USAGE
-        @{SCRIPT_NAME} <worker-src-dir>
+        @{SCRIPT_NAME} <worker-name>
 
     DESCRIPTION
         Build a cloudflare worker from source.
 
     ARGUMENTS
-        <worker-src-dir>
-        A directory containing worker source code and a 'wrangler.toml' config
-        file.
+        <worker-name>
+        The name of a cloudflare worker source directory.
 
     END
 EOF
 )"
 
-WORKER_SOURCE_DIR_PATH=""
+WORKER_DIR_NAME=""
 
 function print_manual_page()
 {
@@ -72,7 +71,7 @@ function parse_cli()
         return 1
     fi
 
-    WORKER_SOURCE_DIR_PATH="${1}"
+    WORKER_DIR_NAME="${1}"
 }
 
 function checkNodePackageInstalled()
@@ -90,7 +89,7 @@ function checkNodePackageInstalled()
 
 function buildWorker()
 {
-    local WORKER_CONFIG_FILE_PATH="${WORKER_SOURCE_DIR_PATH}/wrangler.toml"
+    local WORKER_CONFIG_FILE_PATH="${PROJECT_DIR_PATH}/cloudflare/workers/${WORKER_DIR_NAME}/wrangler.toml"
 
     if [ ! -e "${WORKER_CONFIG_FILE_PATH}" ]
     then
@@ -98,7 +97,7 @@ function buildWorker()
         return 1
     fi
 
-    local WORKER_DIR_NAME="$(basename "${WORKER_SOURCE_DIR_PATH}")"
+    local WORKER_SOURCE_DIR_PATH="${PROJECT_DIR_PATH}/cloudflare/workers/${WORKER_DIR_NAME}"
     local WORKER_BUILD_DIR_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_DIR_NAME}"
 
     echo ""

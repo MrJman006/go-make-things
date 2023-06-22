@@ -11,10 +11,10 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
         @{SCRIPT_NAME}
 
     USAGE
-        @{SCRIPT_NAME} [optons] <kv-config>
+        @{SCRIPT_NAME} [optons] <kv-name>
 
     DESCRIPTION
-        Deploy a cloudflare KV namespace using the supplied configuration.
+        Deploy a cloudflare KV namespace.
 
     OPTIONS
         -h|--help
@@ -25,14 +25,14 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
             characters, but must not start with a number.
 
     ARGUMENTS
-        <kv-config>
-        A config file for a KV namespace.
+        <kv-name>
+        The name of a cloudflare KV config file.
 
     END
 EOF
 )"
 
-CONFIG_FILE_PATH=""
+KV_NAME=""
 KV_NAME_PREFIX=""
 
 fn_print_manual_page()
@@ -101,14 +101,16 @@ fn_parse_cli()
         return 1
     fi
 
-    CONFIG_FILE_PATH="${1}"
+    KV_NAME="${1}"
 }
 
 function checkConfigFileExists()
 {
-    if [ ! -e "${CONFIG_FILE_PATH}" ]
+    local KV_CONFIG_FILE_PATH="${PROJECT_DIR_PATH}/cloudflare/kvs/${KV_NAME}.toml"
+
+    if [ ! -e "${KV_CONFIG_FILE_PATH}" ]
     then
-        echo "The supplied config file could not be located. Check the config file path and run this script again."
+        echo "The supplied kv config could not be located. Ensure that a kv config file named '${KV_NAME}.toml' exists and run this script again."
         return 1
     fi
 
@@ -130,8 +132,6 @@ function checkNodePackageInstalled()
 
 function deployKv()
 {
-    local KV_NAME="$(cat "${CONFIG_FILE_PATH}" | grep -P "^name =" | tr -d " \"" | cut -d "=" -f 2)"
-
     echo ""
     echo "========"
     echo "Deploying KV: ${KV_NAME_PREFIX}${KV_NAME}"
@@ -154,6 +154,8 @@ function deployKv()
     local DEPLOYED_INDEX=$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"title\":" | grep -n "\"title\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep "${KV_NAME_PREFIX}${KV_NAME}" | cut -d ":" -f 1)
     local DEPLOYED_ID="$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"id\":" | grep -n "\"id\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep -P "^${DEPLOYED_INDEX}" | cut -d ":" -f 2)"
 
+
+    local KV_CONFIG_FILE_PATH="${PROJECT_DIR_PATH}/cloudflare/kvs/${KV_NAME}.toml"
 
     local ADDING="no"
     while read LINE
@@ -186,7 +188,7 @@ function deployKv()
 
         echo "Setting key '${KEY}'."
         npx wrangler kv:key put --namespace-id="${DEPLOYED_ID}" "${KEY}" "${VALUE}" 1>/dev/null
-    done < <(cat "${CONFIG_FILE_PATH}")
+    done < <(cat "${KV_CONFIG_FILE_PATH}")
 
     echo "========"
 }

@@ -11,10 +11,10 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
         @{SCRIPT_NAME}
 
     USAGE
-        @{SCRIPT_NAME} [optons] <worker-config>
+        @{SCRIPT_NAME} [optons] <worker-name>
 
     DESCRIPTION
-        Deploy a cloudflare worker using the supplied configuration.
+        Deploy a cloudflare worker.
 
     OPTIONS
         -h|--help
@@ -29,14 +29,14 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
             characters, but must not start with a number.
 
     ARGUMENTS
-        <worker-config>
-        A config file for a worker.
+        <worker-name>
+        The name of a cloudflare worker build directory.
 
     END
 EOF
 )"
 
-CONFIG_FILE_PATH=""
+WORKER_NAME=""
 KV_NAME_PREFIX=""
 WORKER_NAME_PREFIX=""
 
@@ -111,17 +111,16 @@ fn_parse_cli()
         return 1
     fi
 
-    CONFIG_FILE_PATH="${1}"
+    WORKER_NAME="${1}"
 }
 
 function checkConfigFileExists()
 {
-    echo "${CONFIG_FILE_PATH}" | grep -q "_cloudflare/"
-    RESULT=$?
+    local WORKER_CONFIG_FILE_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_NAME}/wrangler.toml"
 
-    if [ ${RESULT} -ne 0 ] || [ ! -e "${CONFIG_FILE_PATH}" ]
+    if [ ! -e "${WORKER_CONFIG_FILE_PATH}" ]
     then
-        echo "The supplied config file could not be located in the worker build directory. Check the config file path and run this script again."
+        echo "Could not locate a 'wrangler.toml' config file. Ensure that a 'wrangler.toml' config file exists in the worker build directory and run this script again."
         return 1
     fi
 
@@ -143,11 +142,13 @@ function checkNodePackageInstalled()
 
 function fillInWorkerKvs()
 {
+    local WORKER_CONFIG_FILE_PATH="${1}"
+
     #
     # Check if the current worker has any automation data for KV Namespaces.
     #
 
-    grep -Pq "^# Automation Meta-Data: KV Namespaces" "${CONFIG_FILE_PATH}"
+    grep -Pq "^# Automation Meta-Data: KV Namespaces" "${WORKER_CONFIG_FILE_PATH}"
     RESULT=$?
 
     if [ ${RESULT} -ne 0 ]
@@ -161,8 +162,8 @@ function fillInWorkerKvs()
     # Collect automation data for KV Namespaces.
     #
 
-    local KV_NAME_LIST=($(cat "${CONFIG_FILE_PATH}" | grep "KV Name:" | tr -d " " | cut -d ":" -f 2 ))
-    local KV_BINDING_LIST=($(cat "${CONFIG_FILE_PATH}" | grep "KV Binding:" | tr -d " " | cut -d ":" -f 2 ))
+    local KV_NAME_LIST=($(cat "${WORKER_CONFIG_FILE_PATH}" | grep "KV Name:" | tr -d " " | cut -d ":" -f 2 ))
+    local KV_BINDING_LIST=($(cat "${WORKER_CONFIG_FILE_PATH}" | grep "KV Binding:" | tr -d " " | cut -d ":" -f 2 ))
 
     #
     # For each KV Namespace defined in the automation data, add it to the worker
@@ -194,7 +195,7 @@ function fillInWorkerKvs()
         # Check if the KV needs to be added to the worker config.
         #
 
-        grep -q "name = \"${KV_NAME_PREFIX}${KV_NAME}\"" "${CONFIG_FILE_PATH}"
+        grep -q "name = \"${KV_NAME_PREFIX}${KV_NAME}\"" "${WORKER_CONFIG_FILE_PATH}"
         RESULT=$?
 
         if [ ${RESULT} -ne 0 ]
@@ -204,37 +205,37 @@ function fillInWorkerKvs()
 
             echo "Adding KV Namespace '${KV_NAME_PREFIX}${KV_NAME}' to the config."
 
-            echo "" >> "${CONFIG_FILE_PATH}"
-            echo "[[kv_namespaces]]" >> "${CONFIG_FILE_PATH}"
-            echo "name = \"${KV_NAME_PREFIX}${KV_NAME}\"" >> "${CONFIG_FILE_PATH}"
-            echo "binding = \"${KV_BINDING}\"" >> "${CONFIG_FILE_PATH}"
-            echo "id = \"${DEPLOYED_ID}\"" >> "${CONFIG_FILE_PATH}"
+            echo "" >> "${WORKER_CONFIG_FILE_PATH}"
+            echo "[[kv_namespaces]]" >> "${WORKER_CONFIG_FILE_PATH}"
+            echo "name = \"${KV_NAME_PREFIX}${KV_NAME}\"" >> "${WORKER_CONFIG_FILE_PATH}"
+            echo "binding = \"${KV_BINDING}\"" >> "${WORKER_CONFIG_FILE_PATH}"
+            echo "id = \"${DEPLOYED_ID}\"" >> "${WORKER_CONFIG_FILE_PATH}"
         fi
     done
 }
 
 function fillInWorkerPrefix()
 {
-    local WORKER_NAME="$(cat "${CONFIG_FILE_PATH}" | grep -P "^name = " | head -n 1 | tr -d " \"" | cut -d "=" -f 2)"
-    echo "${WORKER_NAME}" | grep -Pq "^${WORKER_NAME_PREFIX}"
-    RESULT=$?
+    local WORKER_CONFIG_FILE_PATH="${1}"
 
-    if [ ${RESULT} -eq 0 ]
+    if [ "${WORKER_NAME_PREFIX}" == "" ]
     then
         return 0
     fi
 
     echo "Adding prefix to worker name."
-    sed -ri "s/^name = \"${WORKER_NAME}\"/name = \"${WORKER_NAME_PREFIX}${WORKER_NAME}\"/" "${CONFIG_FILE_PATH}"
+    sed -ri "s/^name = \"${WORKER_NAME}\"/name = \"${WORKER_NAME_PREFIX}${WORKER_NAME}\"/" "${WORKER_CONFIG_FILE_PATH}"
 }
 
 function deployWorkerSecrets()
 {
+    local WORKER_CONFIG_FILE_PATH="${1}"
+
     #
     # Check if the current worker has any automation data for Secrets.
     #
 
-    grep -Pq "^# Automation Meta-Data: Secret Variables" "${CONFIG_FILE_PATH}"
+    grep -Pq "^# Automation Meta-Data: Secret Variables" "${WORKER_CONFIG_FILE_PATH}"
     RESULT=$?
 
     if [ ${RESULT} -ne 0 ]
@@ -244,7 +245,7 @@ function deployWorkerSecrets()
 
     echo "Found Secret Variables automation data."
 
-    local WORKER_BUILD_DIR_PATH="$(dirname "${CONFIG_FILE_PATH}")"
+    local WORKER_BUILD_DIR_PATH="$(dirname "${WORKER_CONFIG_FILE_PATH}")"
     local SECRET_VARS_JSON_PATH="${WORKER_BUILD_DIR_PATH}/secret-vars.json"
 
     if [ ! -e "${SECRET_VARS_JSON_PATH}" ]
@@ -254,24 +255,24 @@ function deployWorkerSecrets()
         return 1
     fi
 
-    npx wrangler secret:bulk --config "${CONFIG_FILE_PATH}" "${SECRET_VARS_JSON_PATH}"
+    npx wrangler secret:bulk --config "${WORKER_CONFIG_FILE_PATH}" "${SECRET_VARS_JSON_PATH}"
 }
 
 function deployWorker()
 {
-    local WORKER_NAME="$(cat "${CONFIG_FILE_PATH}" | grep -P "^name = " | head -n 1 | tr -d " \"" | cut -d "=" -f 2)"
+    local WORKER_CONFIG_FILE_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_NAME}/wrangler.toml"
 
     echo ""
     echo "========"
     echo "Deploying Worker: ${WORKER_NAME_PREFIX}${WORKER_NAME}"
 
-    fillInWorkerKvs || return $?
+    fillInWorkerKvs "${WORKER_CONFIG_FILE_PATH}" || return $?
 
-    fillInWorkerPrefix || return $?
+    fillInWorkerPrefix "${WORKER_CONFIG_FILE_PATH}" || return $?
 
-    npx wrangler deploy --config "${CONFIG_FILE_PATH}" || return $?
+    npx wrangler deploy --config "${WORKER_CONFIG_FILE_PATH}" || return $?
 
-    deployWorkerSecrets || return $?
+    deployWorkerSecrets "${WORKER_CONFIG_FILE_PATH}" || return $?
 
     echo "========"
 }
