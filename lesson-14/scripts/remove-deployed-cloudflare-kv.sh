@@ -14,7 +14,7 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
         @{SCRIPT_NAME} [optons] <kv-config>
 
     DESCRIPTION
-        Deploy a cloudflare KV.
+        Remove a deployed cloudflare KV.
 
     OPTIONS
         -h|--help
@@ -141,103 +141,29 @@ function checkNodePackageInstalled()
     return 0
 }
 
-function deployKv()
+function removeDeployedKv()
 {
     local KV_NAME="$(grep -P "^name = " "${KV_CONFIG_FILE_PATH}" | head -n 1 | tr -d " \"" | cut -d "=" -f 2)"
 
     echo ""
     echo "========"
-    echo "Deploying KV: ${KV_NAME}"
-
-    #
-    # Create a dummy worker to satisfy the KV deployment process.
-    #
-
-    local TEMP_FILE="$(mktemp --tmpdir=/dev/shm XXXXXX-wrangler.toml)"
-  
-    echo "name = \"kv\"" > "${TEMP_FILE}"
-
-    #
-    # Deploy the KV if it has not already been deployed.
-    #
+    echo "Removing Deployed KV: ${KV_NAME}" 
 
     local DEPLOYED_KV_NAMESPACES="$(npx wrangler kv:namespace list)"
 
     echo "${DEPLOYED_KV_NAMESPACES}" | grep -Pq "${KV_NAME}"
     RESULT=$?
 
-    if [ ${RESULT} -ne 0 ]
+    if [ ${RESULT} -eq 0 ]
     then
-        npx wrangler kv:namespace create --config "${TEMP_FILE}" "${KV_NAME}" || return $?
-        DEPLOYED_KV_NAMESPACES="$(npx wrangler kv:namespace list)"
+        local DEPLOYED_KV_INDEX=$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"title\":" | grep -n "\"title\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep "${KV_NAME}" | cut -d ":" -f 1)
+        local DEPLOYED_KV_ID="$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"id\":" | grep -n "\"id\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep -P "^${DEPLOYED_KV_INDEX}" | cut -d ":" -f 2)"
+
+        echo "Removing KV."
+        npx wrangler kv:namespace delete --namespace-id="${DEPLOYED_KV_ID}" || return $?
     fi
 
-    #
-    # Fill the KV with configured data. Each key value pair are assumed to be
-    # on a single line. Multi-line strings are not currently supported.
-    #
-
-    local DEPLOYED_KV_INDEX=$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"title\":" | grep -n "\"title\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep "${KV_NAME}" | cut -d ":" -f 1)
-    local DEPLOYED_KV_ID="$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"id\":" | grep -n "\"id\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep -P "^${DEPLOYED_KV_INDEX}" | cut -d ":" -f 2)"
-
-    local ADDING_DATA="no"
-    while read LINE
-    do
-        #
-        # Skip blank and comment lines.
-        #
-
-        echo "${LINE}" | grep -Pq "^($|#)"
-        RESULT=$?
-
-        if [ ${RESULT} -eq 0 ]
-        then
-            continue
-        fi
-
-        #
-        # Lines following 'data' sections should be processed as key value
-        # pairs for the KV.
-        #
-
-        echo "${LINE}" | grep -Pq "^\s*\[data\]\s*$"
-        RESULT=$?
-
-        if [ ${RESULT} -eq 0 ]
-        then
-            ADDING_DATA="yes"
-            continue
-        fi
-
-        #
-        # Other sections should not be processed for key value pairs.
-        #
-
-        echo "${LINE}" | grep -Pq "^\s*\[[a-zA-Z0-9-_]+\]\s*$"
-        RESULT=$?
-
-        if [ ${RESULT} -eq 0 ]
-        then
-            ADDING_DATA="no"
-            continue
-        fi
-
-        #
-        # Add the key value pair to the KV.
-        #
-
-        if [ "${ADDING_DATA}" == "no" ]
-        then
-            continue
-        fi
-
-        local KEY="$(echo "${LINE}" | cut -d "=" -f 1 | sed -r -e "s/ $//")"
-        local VALUE="$(echo "${LINE}" | cut -d "=" -f 2 | sed -r -e "s/^ //" -e "s/(^\"|\"$)//g")"
-
-        echo "Adding key '${KEY}' to the KV."
-        npx wrangler kv:key put --namespace-id="${DEPLOYED_KV_ID}" "${KEY}" "${VALUE}" 1>/dev/null
-    done < <(cat "${KV_CONFIG_FILE_PATH}")
-
+    echo "Done."
     echo "========"
 }
 
@@ -253,7 +179,7 @@ function main()
 
     checkKvConfigFileExists || return $?
 
-    deployKv || return $?
+    removeDeployedKv || return $?
 }
 
 parse_cli "$@" && main

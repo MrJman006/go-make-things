@@ -11,46 +11,44 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
         @{SCRIPT_NAME}
 
     USAGE
-        @{SCRIPT_NAME} [optons] <worker-name>
+        @{SCRIPT_NAME} [optons] <worker-build-dir>
 
     DESCRIPTION
-        Deploy a cloudflare worker.
+        Deploy a built cloudflare worker.
 
     OPTIONS
         -h|--help
-            Print this manual page.
-
-        --kv-prefix <prefix>
-            Prefix KV namespace names. The prefix may use alpha-numeric and '_'
-            characters, but must not start with a number.
-
-        --worker-prefix <prefix>
-            Prefix the worker name. The prefix may use alpha-numeric and '_'
-            characters, but must not start with a number.
+            Show this manual page.
 
     ARGUMENTS
-        <worker-name>
-        The name of a cloudflare worker build directory.
+        <worker-build-dir>
+            A cloudflare worker build directory. This can be the name of a
+            build directory found in '_cloudflare/workers' or can be a path
+            to a worker build directory.
 
     END
 EOF
 )"
 
-WORKER_NAME=""
-KV_NAME_PREFIX=""
-WORKER_NAME_PREFIX=""
+SHOW_HELP=""
+WORKER_BUILD_DIR=""
+WORKER_BUILD_DIR=""
+WORKER_CONFIG_FILE_PATH=""
 
-fn_print_manual_page()
+function print_manual_page()
 {
     #
     # Instantiate the template.
     #
 
-    local TEMP_FILE="$(mktemp --tmpdir="/dev/shm")"
+    local TEMP_FILE="$(mktemp --tmpdir="/dev/shm" "XXXXXX-help.txt")"
 
     echo "${MANUAL_PAGE_TEMPLATE}" > "${TEMP_FILE}"
 
-    # Remove leading spaces.
+    #
+    # Remove leading spaces and fill in template fields.
+    #
+
     sed -ri "s/^\s{4}//" "${TEMP_FILE}"
 
     sed -ri "s/@\{SCRIPT_NAME\}/${THIS_SCRIPT_NAME}/g" "${TEMP_FILE}"
@@ -68,25 +66,19 @@ fn_print_manual_page()
     rm "${TEMP_FILE}"
 }
 
-fn_parse_cli()
+function parse_cli()
 {
+    #
+    # Parse options.
+    #
+
     while [ 1 ]
     do
         case "${1}" in
             -h|--help)
                 shift
-                fn_print_manual_page
-                return 1
-                ;;
-            --kv-prefix)
-                shift
-                KV_NAME_PREFIX="${1}"
-                shift
-                ;;
-            --worker-prefix)
-                shift
-                WORKER_NAME_PREFIX="${1}"
-                shift
+                SHOW_HELP="yes"
+                return 0
                 ;;
             *)
                 if [ "${1:0:1}" == "-" ] && [ "${1}" != "--" ]
@@ -105,26 +97,17 @@ fn_parse_cli()
         esac
     done
 
+    #
+    # Parse arugments.
+    #
+
     if [ $# -lt 1 ]
     then
-        echo "Missing arguments. Need --help?"
+        echo "Missing required arguments. Need --help?"
         return 1
     fi
 
-    WORKER_NAME="${1}"
-}
-
-function checkConfigFileExists()
-{
-    local WORKER_CONFIG_FILE_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_NAME}/wrangler.toml"
-
-    if [ ! -e "${WORKER_CONFIG_FILE_PATH}" ]
-    then
-        echo "Could not locate a 'wrangler.toml' config file. Ensure that a 'wrangler.toml' config file exists in the worker build directory and run this script again."
-        return 1
-    fi
-
-    return 0
+    WORKER_BUILD_DIR="${1}"
 }
 
 function checkNodePackageInstalled()
@@ -140,10 +123,40 @@ function checkNodePackageInstalled()
     return 0
 }
 
+function checkWorkerBuildExists()
+{
+    #
+    # Ensure the worker build directory exists.
+    #
+
+    if [ -e "${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_BUILD_DIR}" ]
+    then
+        WORKER_BUILD_DIR_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_BUILD_DIR}"
+    elif [ -e "${WORKER_BUILD_DIR}" ]
+    then
+        WORKER_BUILD_DIR_PATH="${WORKER_BUILD_DIR}"
+    else
+        echo "ERROR: Could not locate the worker build directory. Ensure the supplied worker directory exists and run the script again."
+        return 1
+    fi
+
+    #
+    # Ensure the build directory contains a 'wrangler.toml' config file.
+    #
+
+    WORKER_CONFIG_FILE_PATH="${WORKER_BUILD_DIR_PATH}/wrangler.toml"
+
+    if [ ! -e "${WORKER_CONFIG_FILE_PATH}" ]
+    then
+        echo "ERROR: The supplied worker build directory does not contain a 'wrangler.toml' config file. Ensure that a 'wrangler.toml' config file exists and run this script again."
+        return 1
+    fi
+
+    return 0
+}
+
 function fillInWorkerKvs()
 {
-    local WORKER_CONFIG_FILE_PATH="${1}"
-
     #
     # Check if the current worker has any automation data for KV Namespaces.
     #
@@ -156,17 +169,17 @@ function fillInWorkerKvs()
         return 0
     fi
 
-    echo "Found KV Namespace automation data."
+    echo "Found KV automation meta-data."
 
     #
-    # Collect automation data for KV Namespaces.
+    # Collect automation meta-data for KV Namespaces.
     #
 
     local KV_NAME_LIST=($(cat "${WORKER_CONFIG_FILE_PATH}" | grep "KV Name:" | tr -d " " | cut -d ":" -f 2 ))
     local KV_BINDING_LIST=($(cat "${WORKER_CONFIG_FILE_PATH}" | grep "KV Binding:" | tr -d " " | cut -d ":" -f 2 ))
 
     #
-    # For each KV Namespace defined in the automation data, add it to the worker
+    # For each KV defined in the automation meta-data, add it to the worker
     # config file if it does not already exist.
     #
 
@@ -182,12 +195,12 @@ function fillInWorkerKvs()
         # Check if the KV has been deployed.
         #
 
-        echo "${DEPLOYED_KV_NAMESPACES}" | grep -q "${KV_NAME_PREFIX}${KV_NAME}"
+        echo "${DEPLOYED_KV_NAMESPACES}" | grep -q "${KV_NAME}"
         RESULT=$?
 
         if [ ${RESULT} -ne 0 ]
         then
-            echo "Could not locate a deployed KV Namespace with name '${KV_NAME_PREFIX}${KV_NAME}'. Deploy a KV Namespace with the name '${KV_NAME_PREFIX}${KV_NAME}' and run this script again."
+            echo "Could not locate a deployed KV Namespace with name '${KV_NAME}'. Deploy a KV Namespace with the name '${KV_NAME}' and run this script again."
             return 1
         fi
 
@@ -195,44 +208,29 @@ function fillInWorkerKvs()
         # Check if the KV needs to be added to the worker config.
         #
 
-        grep -q "name = \"${KV_NAME_PREFIX}${KV_NAME}\"" "${WORKER_CONFIG_FILE_PATH}"
+        grep -q "name = \"${KV_NAME}\"" "${WORKER_CONFIG_FILE_PATH}"
         RESULT=$?
 
         if [ ${RESULT} -ne 0 ]
         then
-            local DEPLOYED_INDEX=$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"title\":" | grep -n "\"title\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep "${KV_NAME_PREFIX}${KV_NAME}" | cut -d ":" -f 1)
-            local DEPLOYED_ID="$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"id\":" | grep -n "\"id\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep -P "^${DEPLOYED_INDEX}" | cut -d ":" -f 2)"
+            local DEPLOYED_KV_INDEX=$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"title\":" | grep -n "\"title\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep "${KV_NAME}" | cut -d ":" -f 1)
+            local DEPLOYED_KV_ID="$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"id\":" | grep -n "\"id\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep -P "^${DEPLOYED_KV_INDEX}" | cut -d ":" -f 2)"
 
-            echo "Adding KV Namespace '${KV_NAME_PREFIX}${KV_NAME}' to the config."
+            echo "Adding KV Namespace '${KV_NAME}' to the config."
 
             echo "" >> "${WORKER_CONFIG_FILE_PATH}"
             echo "[[kv_namespaces]]" >> "${WORKER_CONFIG_FILE_PATH}"
-            echo "name = \"${KV_NAME_PREFIX}${KV_NAME}\"" >> "${WORKER_CONFIG_FILE_PATH}"
+            echo "name = \"${KV_NAME}\"" >> "${WORKER_CONFIG_FILE_PATH}"
             echo "binding = \"${KV_BINDING}\"" >> "${WORKER_CONFIG_FILE_PATH}"
-            echo "id = \"${DEPLOYED_ID}\"" >> "${WORKER_CONFIG_FILE_PATH}"
+            echo "id = \"${DEPLOYED_KV_ID}\"" >> "${WORKER_CONFIG_FILE_PATH}"
         fi
     done
 }
 
-function fillInWorkerPrefix()
-{
-    local WORKER_CONFIG_FILE_PATH="${1}"
-
-    if [ "${WORKER_NAME_PREFIX}" == "" ]
-    then
-        return 0
-    fi
-
-    echo "Adding prefix to worker name."
-    sed -ri "s/^name = \"${WORKER_NAME}\"/name = \"${WORKER_NAME_PREFIX}${WORKER_NAME}\"/" "${WORKER_CONFIG_FILE_PATH}"
-}
-
 function deployWorkerSecrets()
 {
-    local WORKER_CONFIG_FILE_PATH="${1}"
-
     #
-    # Check if the current worker has any automation data for Secrets.
+    # Check if the current worker has any automation meta-data for Secret Variables.
     #
 
     grep -Pq "^# Automation Meta-Data: Secret Variables" "${WORKER_CONFIG_FILE_PATH}"
@@ -243,15 +241,18 @@ function deployWorkerSecrets()
         return 0
     fi
 
-    echo "Found Secret Variables automation data."
+    echo "Found Secret Variables automation meta-data."
 
-    local WORKER_BUILD_DIR_PATH="$(dirname "${WORKER_CONFIG_FILE_PATH}")"
+    #
+    # Ensure a secret variables config file exists in the worker build
+    # directory.
+    #
+
     local SECRET_VARS_JSON_PATH="${WORKER_BUILD_DIR_PATH}/secret-vars.json"
 
     if [ ! -e "${SECRET_VARS_JSON_PATH}" ]
     then
-        echo ""
-        echo "WARNING: This worker relies on secret variables and no secret variable config file was found in the build directory. You must create a secret variables config file in the build directory of the worker and re-run this script. The config file must be named 'secret-vars.json' and contain a json object that maps a single key value pair for each required secret variable. See the worker's 'wrangler.toml' for a list of required secret variables."
+        echo "ERROR: This worker relies on secret variables and no secret variable config file was found in the build directory. You must create a secret variables config file in the build directory of the worker and re-run this script. The config file must be named 'secret-vars.json' and contain a json object that maps a single key value pair for each required secret variable. See the worker's 'wrangler.toml' for a list of required secret variables."
         return 1
     fi
 
@@ -260,30 +261,34 @@ function deployWorkerSecrets()
 
 function deployWorker()
 {
-    local WORKER_CONFIG_FILE_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_NAME}/wrangler.toml"
+    local WORKER_NAME="$(grep -P "^name = " "${WORKER_CONFIG_FILE_PATH}" | head -n 1 | tr -d " \"" | cut -d "=" -f 2)"
 
     echo ""
     echo "========"
-    echo "Deploying Worker: ${WORKER_NAME_PREFIX}${WORKER_NAME}"
+    echo "Deploying Worker: ${WORKER_NAME}"
 
-    fillInWorkerKvs "${WORKER_CONFIG_FILE_PATH}" || return $?
-
-    fillInWorkerPrefix "${WORKER_CONFIG_FILE_PATH}" || return $?
+    fillInWorkerKvs || return $?
 
     npx wrangler deploy --config "${WORKER_CONFIG_FILE_PATH}" || return $?
 
-    deployWorkerSecrets "${WORKER_CONFIG_FILE_PATH}" || return $?
+    deployWorkerSecrets || return $?
 
     echo "========"
 }
 
-fn_main()
+function main()
 {
-    checkConfigFileExists || return $?
+    if [ "${SHOW_HELP}" == "yes" ]
+    then
+        show_manual_page
+        return 0
+    fi
 
     checkNodePackageInstalled "wrangler" || return $?
+
+    checkWorkerBuildExists || return $?
 
     deployWorker || return $?
 }
 
-fn_parse_cli "$@" && fn_main
+parse_cli "$@" && main

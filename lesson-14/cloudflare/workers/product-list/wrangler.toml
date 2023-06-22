@@ -3,11 +3,11 @@
 #
 # This worker relies on the following KV namespaces.
 #
-# KV Name: storage
+# KV Name: gmtww_storage
 # KV Binding: STORAGE
 # KV Description: This KV is used to hold data for the API.
 ####
 
-name = "product-list"
+name = "gmtww-api-product-list"
 main = "main.js"
 compatibility_date = "2023-05-18"

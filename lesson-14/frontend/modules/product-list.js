@@ -1,6 +1,6 @@
 import { storage } from "./storage.js"
 
-let _PRODUCTS_ENDPOINT = "https://gmtww-l14-api-product-list.cfjcd.workers.dev";
+let _PRODUCTS_ENDPOINT = "https://gmtww-api-product-list.cfjcd.workers.dev";
 
 let _STORAGE_ID = "productList";
 

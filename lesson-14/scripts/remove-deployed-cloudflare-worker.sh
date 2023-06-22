@@ -14,7 +14,7 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
         @{SCRIPT_NAME} [options] <worker-source-dir>
 
     DESCRIPTION
-        Build a cloudflare worker from source.
+        Remove a deployed cloudflare worker.
 
     OPTIONS
         -h|--help
@@ -155,32 +155,30 @@ function checkWorkerSourceExists()
     return 0
 }
 
-function buildWorker()
+function removeDeployedWorker()
 {
-    local WORKER_DIR_NAME="$(basename ${WORKER_SOURCE_DIR_PATH})"
-    local WORKER_BUILD_DIR_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_DIR_NAME}"
     local WORKER_NAME="$(grep -P "^name = " "${WORKER_CONFIG_FILE_PATH}" | head -n 1 | tr -d " \"" | cut -d "=" -f 2)"
-
-    #
-    # Build the worker.
-    #
 
     echo ""
     echo "========"
-    echo "Building Worker: ${WORKER_NAME}"
+    echo "Removing Deployed Worker: ${WORKER_NAME}"
 
-    echo "Compiling source."
-    npx esbuild \
-        --bundle \
-        --tree-shaking=true \
-        --legal-comments=inline \
-        --target=chrome58,firefox57,safari11 \
-        --outfile="${WORKER_BUILD_DIR_PATH}/main.js" \
-        "${WORKER_SOURCE_DIR_PATH}/main.js"
+    npx wrangler deployments list --config "${WORKER_CONFIG_FILE_PATH}" | grep -Pq "workers.api.error.service_not_found"
+    RESULT=$?
 
-    echo "Copying config file."
-    cp "${WORKER_CONFIG_FILE_PATH}" "${WORKER_BUILD_DIR_PATH}"
+    if [ ${RESULT} -ne 0 ]
+    then
+        echo "Removing worker."
 
+        #
+        # Using a no-op to start the pipe line to put wrangler in
+        # non-interactive mode.
+        #
+
+        : | npx wrangler delete --config "${WORKER_CONFIG_FILE_PATH}" || return $?
+    fi
+
+    echo "Done."
     echo "========"
 }
 
@@ -196,7 +194,7 @@ function main()
 
     checkWorkerSourceExists || return $?
 
-    buildWorker || return $?
+    removeDeployedWorker || return $?
 }
 
 parse_cli "$@" && main
