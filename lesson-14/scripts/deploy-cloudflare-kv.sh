@@ -183,8 +183,8 @@ function deployKv()
             continue
         fi
 
-        local KEY="$(echo "${LINE}" | cut -d "=" -f 1)"
-        local VALUE="$(echo "${LINE}" | cut -d "=" -f 2)"
+        local KEY="$(echo "${LINE}" | cut -d "=" -f 1 | sed -r -e "s/ $//")"
+        local VALUE="$(echo "${LINE}" | cut -d "=" -f 2 | sed -r -e "s/^ //" -e "s/(^\"|\"$)//g")"
 
         echo "Setting key '${KEY}'."
         npx wrangler kv:key put --namespace-id="${DEPLOYED_ID}" "${KEY}" "${VALUE}" 1>/dev/null
