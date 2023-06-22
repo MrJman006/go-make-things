@@ -1,11 +1,11 @@
 import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
 import { showPageContentErrorMessage } from "./modules/errors.js";
-import { component } from "./vendors/reef/reef.es.min.js";
+import { buildCartIcon } from "./modules/nav-bar.js";
 
 function buildProductGallery(appState)
 {
-    let {productList, cart} = appState;
+    let {productList} = appState;
 
     let pageContentContainer = document.querySelector("[data-page-content]");
 
@@ -40,25 +40,24 @@ function buildProductGallery(appState)
     productList.forEach(buildProductCard);
 }
 
-function generateCartIconHtml(cart)
+async function buildInitialAppState()
 {
-    let productCount = cart.items().length;
+    let appState = {};
 
-    let cartIconHtml = `
-        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-    `;
+    //
+    // Product List
+    //
 
-    return cartIconHtml;
-}
+    appState.productList = await fetchProductList();
 
-function buildCartIcon(cart)
-{
-    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+    //
+    // Cart
+    //
 
-    component(
-        cartIconContainer,
-        () =>{ return generateCartIconHtml(cart); }
-    );
+    appState.cart = Cart();
+    appState.cart.load();
+
+    return appState;
 }
 
 function cleanUpUrl()
@@ -72,17 +71,11 @@ async function main()
 {
     cleanUpUrl();
 
-    let appState = {};
-
-    appState.productList = await fetchProductList();
-
-    appState.cart = Cart();
-    appState.cart.load();
-
-    buildProductGallery(appState);
+    let appState = await buildInitialAppState();
 
     buildCartIcon(appState.cart);
+
+    buildProductGallery(appState);
 }
 
 window.addEventListener("load", main);
-

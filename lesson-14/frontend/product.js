@@ -1,50 +1,37 @@
-////////////////////////////////
-// Imports
-
-import { ProductList } from "./modules/product-list.js";
-import { Cart } from "./modules/cart.js";
-import { showErrorMessage, showErrorMessageAndRedirect } from "./modules/errors.js";
 import { store, component } from "./vendors/reef/reef.es.min.js"
+import { fetchProductList } from "./modules/product-list.js";
+import { Cart } from "./modules/cart.js";
+import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
+import { buildCartIcon } from "./modules/nav-bar.js";
 
-////////////////////////////////
-// Constants
-
-// N/A
-
-////////////////////////////////
-// Variables
-
-let cart;
-let productList;
-
-////////////////////////////////
-// Functions
-
-function handleAddToCartButtonClick(e)
+async function buildInitialAppState()
 {
-    let buttonType = e.target.getAttribute("data-button");
-    if(buttonType != "add-to-cart")
-    {
-        return;
-    }
+    let appState = {};
 
-    let productId = e.target.getAttribute("data-product");
-    cart.add(productId);
+    //
+    // Product List
+    //
+
+    appState.productList = await fetchProductList();
+
+    //
+    // Cart
+    //
+
+    appState.cart = Cart();
+    appState.cart.load();
+
+    return appState;
 }
 
-function onClick(e)
-{
-    handleAddToCartButtonClick(e);
-}
-
-function getProductId()
+function parseProductIdFromUrl()
 {
     let url = new URL(window.location.href);
     let id = url.searchParams.get("id");
     return id;
 }
 
-function generateProductListingCartDetailsHtml(product)
+function generateProductListingCartDetailsHtml(product, cart)
 {
     let html = ``;
 
@@ -68,7 +55,7 @@ function generateProductListingCartDetailsHtml(product)
     return html;
 }
 
-function generateProductListingHtml(product)
+function generateProductListingHtml(product, cart)
 {
     let html = `
         <div class="product-listing" aria-live="polite">
@@ -76,25 +63,27 @@ function generateProductListingHtml(product)
             <p class="product-listing__title">${product.name}</p>
             <p class="product-listing__description">${product.description}</p>
             <p class="product-listing__price">$${product.price}</p>
-            ${generateProductListingCartDetailsHtml(product)}
+            ${generateProductListingCartDetailsHtml(product, cart)}
         </div>
     `;
 
     return html;
 }
 
-function buildProductListing()
+function buildProductListing(appState)
 {
+    let {productList, cart} = appState;
+
     let pageContentContainer = document.querySelector("[data-page-content]");
 
     //
     // Ensure that products are available.
     //
 
-    if(productList.length() == 0)
+    if(productList.length == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showErrorMessage(message);
+        showPageContentErrorMessage(message);
         return;
     }
 
@@ -102,11 +91,11 @@ function buildProductListing()
     // Ensure a product was requested.
     //
 
-    let productId = getProductId();
+    let productId = parseProductIdFromUrl();
     if(!productId || productId == "")
     {
         let message = "The requested product could not be located.";
-        showErrorMessageAndRedirect(message);
+        showPageContentErrorMessageAndRedirect(message);
         return;
     }
 
@@ -114,11 +103,17 @@ function buildProductListing()
     // Ensure the product exists.
     //
 
-    let product = productList.get(productId);
+    let product = productList.find(
+        function(p)
+        {
+            return p.id == productId;
+        }
+    );
+
     if(!product)
     {
         let message = "The requested product could not be located.";
-        showErrorMessageAndRedirect(message);
+        showPageContentErrorMessageAndRedirect(message);
         return;
     }
 
@@ -131,46 +126,46 @@ function buildProductListing()
 
     component(
         pageContentContainer,
-        () => { return generateProductListingHtml(product); }
+        () => { return generateProductListingHtml(product, cart); }
     );
 }
 
-function generateCartIconHtml()
+function handleAddToCartButtonClick(e, appState)
 {
-    let productCount = cart.items().length;
+    let {cart} = appState;
 
-    let cartIconHtml = `
-        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-    `;
+    let buttonType = e.target.getAttribute("data-button");
+    if(buttonType != "add-to-cart")
+    {
+        return;
+    }
 
-    return cartIconHtml;
+    let productId = e.target.getAttribute("data-product");
+    cart.add(productId);
 }
 
-function buildCartIcon()
+function onClick(e, appState)
 {
-    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+    handleAddToCartButtonClick(e, appState);
+}
 
-    component(
-        cartIconContainer,
-        () =>{ return generateCartIconHtml(); }
+function setupEventListeners(appState)
+{
+    document.addEventListener(
+        "click",
+        (e) => { onClick(e, appState); }
     );
 }
 
 async function main()
 {
-    productList = ProductList();
-    await productList.load();
+    let appState = await buildInitialAppState();
 
-    cart = Cart();
-    cart.load();
+    buildCartIcon(appState.cart);
 
-    buildProductListing();
+    buildProductListing(appState);
 
-    buildCartIcon();
+    setupEventListeners(appState);
 }
 
-////////////////////////////////
-// Script Entry Point
-
 window.addEventListener("load", main);
-document.addEventListener("click", onClick);
