@@ -11,21 +11,21 @@ MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
         @{SCRIPT_NAME}
 
     USAGE
-        @{SCRIPT_NAME} <worker>
+        @{SCRIPT_NAME} <worker-src-dir>
 
     DESCRIPTION
-        Deploy the specified cloudflare worker.
+        Build a cloudflare worker from source.
 
     ARGUMENTS
-        <worker>
-        The worker to deploy. The name supplied must exist in the '_cloudflare'
-        build directory.
+        <worker-src-dir>
+        A directory containing worker source code and a 'wrangler.toml' config
+        file.
 
     END
 EOF
 )"
 
-WORKER_NAME=""
+WORKER_SOURCE_DIR_PATH=""
 
 function print_manual_page()
 {
@@ -72,7 +72,7 @@ function parse_cli()
         return 1
     fi
 
-    WORKER_NAME="${1}"
+    WORKER_SOURCE_DIR_PATH="${1}"
 }
 
 function checkNodePackageInstalled()
@@ -88,152 +88,22 @@ function checkNodePackageInstalled()
     return 0
 }
 
-function deployWorkerSecrets()
+function buildWorker()
 {
-    grep -Pq "^# This worker relies on .* secret vars" "${WORKER_CONFIG_PATH}"
-    RESULT=$?
+    local WORKER_CONFIG_FILE_PATH="${WORKER_SOURCE_DIR_PATH}/wrangler.toml"
 
-    if [ ${RESULT} -ne 0 ]
+    if [ ! -e "${WORKER_CONFIG_FILE_PATH}" ]
     then
-        return 0
-    fi
-
-    SECRET_VARS_JSON="$(dirname ${WORKER_CONFIG_PATH})/secret-vars.json"
-
-    if [ ! -e "${SECRET_VARS_JSON}" ]
-    then
-        echo ""
-        echo "WARNING: This worker relies on secret variables and no secret variables config file was found in the build directory. You must do one of the following before the deployed worker will execute successfully."
-        echo ""
-        echo "1. You can manually add secret variables to the deployed cloudflare worker. This can be done via the web UI at cloudflare.com or via wrangler with the command 'wrangler secret put'."
-        echo ""
-        echo "2. You can create a secret variables config file in the build directory of the worker and re-run the deploy script. The config file must be named 'secret-vars.json' and contain a json object that maps a single key value pair for each required secret var."
-        echo ""
-        echo "See the worker's 'wrangler.toml' for a list of required secret variables used by the worker."
-        exit 1
-    fi
-
-    npx wrangler \
-        secret:bulk \
-        --config "${WORKER_CONFIG_PATH}" \
-        "${SECRET_VARS_JSON}"
-}
-
-function deployWorkerKvs()
-{
-    local WORKER_CONFIG_PATH="${1}"
-
-    #
-    # Check if the current worker has any automation data for KV Namespaces.
-    #
-
-    grep -Pq "^# Automation Meta-Data: KV Namespaces" "${WORKER_CONFIG_PATH}"
-    RESULT=$?
-
-    if [ ${RESULT} -ne 0 ]
-    then
-        return 0
-    fi
-
-    echo "Found KV Namespace automation data."
-
-    #
-    # Collect automation data for KV Namespaces.
-    #
-
-    local KV_NAME_LIST=($(cat "${WORKER_CONFIG_PATH}" | grep "KV Name:" | tr -d " " | cut -d ":" -f 2 ))
-    local KV_BINDING_LIST=($(cat "${WORKER_CONFIG_PATH}" | grep "KV Binding:" | tr -d " " | cut -d ":" -f 2 ))
-
-    #
-    # For each KV Namespace defined in the automation data, deploy and define it
-    # if it does not exist.
-    #
-
-    local DEPLOYED_KV_NAMESPACES="$(npx wrangler kv:namespace list)"
-
-    local I
-    for I in ${!KV_NAME_LIST[@]}
-    do
-        local KV_NAME="${KV_NAME_LIST[${I}]}"
-        local KV_BINDING="${KV_BINDING_LIST[${I}]}"
-
-        #
-        # Check if the KV needs to be deployed.
-        #
-
-        echo "${DEPLOYED_KV_NAMESPACES}" | grep -q "${KV_NAME}"
-        RESULT=$?
-
-        if [ ${RESULT} -ne 0 ]
-        then
-            echo "Deploying new KV Namespace '${KV_NAME}'."
-            npx wrangler kv:namespace create "${KV_NAME}"
-            DEPLOYED_KV_NAMESPACES="$(npx wrangler kv:namespace list)"
-        fi
-
-        #
-        # Check if the KV needs to be added to the worker config.
-        #
-
-        grep -q "name = \"${KV_NAME}\"" "${WORKER_CONFIG_PATH}"
-        RESULT=$?
-
-        if [ ${RESULT} -ne 0 ]
-        then
-            local DEPLOYED_INDEX=$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"title\":" | grep -n "\"title\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep "${KV_NAME}" | cut -d ":" -f 1)
-            local DEPLOYED_ID="$(echo "${DEPLOYED_KV_NAMESPACES}" | grep "\"id\":" | grep -n "\"id\":" | tr -d " ,\"" | cut -d ":" -f 1,3 | grep -P "^${DEPLOYED_INDEX}" | cut -d ":" -f 2)"
-
-            echo "Adding KV Namespace '${KV_NAME}' to the config."
-
-            echo "" >> "${WORKER_CONFIG_PATH}"
-            echo "[[kv_namespaces]]" >> "${WORKER_CONFIG_PATH}"
-            echo "name = \"${KV_NAME}\"" >> "${WORKER_CONFIG_PATH}"
-            echo "binding = \"${KV_BINDING}\"" >> "${WORKER_CONFIG_PATH}"
-            echo "id = \"${DEPLOYED_ID}\"" >> "${WORKER_CONFIG_PATH}"
-        fi
-    done
-}
-
-function deployWorkerSecrets()
-{
-    local WORKER_CONFIG_PATH="${1}"
-
-    #
-    # Check if the current worker has any automation data for Secrets.
-    #
-
-    grep -Pq "^# Automation Meta-Data: Secret Variables" "${WORKER_CONFIG_PATH}"
-    RESULT=$?
-
-    if [ ${RESULT} -ne 0 ]
-    then
-        return 0
-    fi
-
-    echo "Found Secret Variables automation data."
-
-    local WORKER_DIR_PATH="$(dirname "${WORKER_CONFIG_PATH}")"
-    local SECRET_VARS_JSON_PATH="${WORKER_DIR_PATH}/secret-vars.json"
-
-    if [ ! -e "${SECRET_VARS_JSON_PATH}" ]
-    then
-        echo ""
-        echo "WARNING: This worker relies on secret variables and no secret variable config file was found in the build directory. You must create a secret variables config file in the build directory of the worker and re-run this script. The config file must be named 'secret-vars.json' and contain a json object that maps a single key value pair for each required secret variable. See the worker's 'wrangler.toml' for a list of required secret variables."
+        echo "Could not locate a 'wrangler.toml' config file. Ensure that a 'wrangler.toml' config file exists in the worker source directory and run this script again."
         return 1
     fi
 
-    npx wrangler secret:bulk --config "${WORKER_CONFIG_PATH}" "${SECRET_VARS_JSON_PATH}"
-}
-
-function buildWorker()
-{
-    local WORKER_SOURCE_DIR_PATH="${PROJECT_DIR_PATH}/cloudflare/${WORKER_NAME}"
-    local WORKER_BUILD_DIR_PATH="${PROJECT_DIR_PATH}/_cloudflare/${WORKER_NAME}"
-    local WORKER_CONFIG_PATH="${WORKER_BUILD_DIR_PATH}/wrangler.toml"
+    local WORKER_DIR_NAME="$(basename "${WORKER_SOURCE_DIR_PATH}")"
+    local WORKER_BUILD_DIR_PATH="${PROJECT_DIR_PATH}/_cloudflare/workers/${WORKER_DIR_NAME}"
 
     echo ""
     echo "========"
-    echo "building: ${WORKER_NAME}"
+    echo "Building Worker: ${WORKER_DIR_NAME}"
 
     npx esbuild \
         --bundle \
@@ -243,7 +113,7 @@ function buildWorker()
         --outfile="${WORKER_BUILD_DIR_PATH}/main.js" \
         "${WORKER_SOURCE_DIR_PATH}/main.js"
 
-    cp "${WORKER_SOURCE_DIR_PATH}/wrangler.toml" "${WORKER_BUILD_DIR_PATH}"
+    cp "${WORKER_CONFIG_FILE_PATH}" "${WORKER_BUILD_DIR_PATH}"
 
     echo "========"
 }
