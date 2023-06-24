@@ -1,11 +1,5 @@
-////////////////////////////////
-// Imports
-
 import { storage } from "./storage.js"
 import { store } from "../vendors/reef/reef.es.min.js"
-
-////////////////////////////////
-// Cart API
 
 function Cart()
 {
@@ -14,8 +8,55 @@ function Cart()
 
     function load()
     {
-        console.log("Loading cart from the site cache.");
-        _cart = store(storage.site.getItem(_CACHE_ID) || []);
+        _cart = store([]);
+
+        //
+        // First load any saved cart data.
+        //
+
+        let savedCartData = storage.site.getItem(_CACHE_ID);
+
+        if(savedCartData)
+        {
+            console.log("Adding products to the cart from the site cache.");
+            _cart.push(...savedCartData);
+        }
+
+        //
+        // Second load cart data from the URL if it exists.
+        //
+
+        let url = new URL(window.location.href);
+        let param = url.searchParams.get("cartItems");
+
+        if(param)
+        {
+            console.log("Adding products to the cart from the URL.");
+            let urlCartData = param.split(",");
+
+            //
+            // Only add products that are not already in the cart.
+            //
+
+            urlCartData.forEach(
+                function(productId)
+                {
+                    if(_cart.includes(productId))
+                    {
+                        return;
+                    }
+
+                    _cart.push(productId);
+                }
+            );
+
+            //
+            // Clean up the URL.
+            //
+
+            url.searchParams.delete("cartItems");
+            history.replaceState(history.state, null, url.toString());
+        }
     }
     
     function add(productId)

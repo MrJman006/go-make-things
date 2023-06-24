@@ -1,7 +1,7 @@
 import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showPageContentErrorMessage } from "./modules/errors.js";
 import { buildCartIcon } from "./modules/nav-bar.js";
+import { showPageContentErrorMessage } from "./modules/errors.js";
 
 function buildProductGallery(appState)
 {

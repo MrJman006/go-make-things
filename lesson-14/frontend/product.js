@@ -1,8 +1,8 @@
 import { store, component } from "./vendors/reef/reef.es.min.js"
 import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
 import { buildCartIcon } from "./modules/nav-bar.js";
+import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
 
 async function buildInitialAppState()
 {
@@ -118,11 +118,14 @@ function buildProductListing(appState)
     }
 
     //
-    // Display the product.
+    // Update the page title.
     //
 
-    // Update the page title.
-    document.title = `${product.name} | ${document.title}`; 
+    document.title = `${product.name} | ${document.title}`;
+
+    //
+    // Display the product.
+    //
 
     component(
         pageContentContainer,

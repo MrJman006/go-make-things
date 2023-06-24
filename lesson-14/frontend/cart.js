@@ -1,27 +1,8 @@
-////////////////////////////////
-// Imports
-
-import { ProductList } from "./modules/product-list.js";
+import { component } from "./vendors/reef/reef.es.min.js"
+import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { parseUrlProductIds, clearUrlProductIds } from "./modules/utils.js";
-import { showNotification } from "./modules/notifications.js";
-import { showErrorMessage } from "./modules/errors.js";
-import { store, component } from "./vendors/reef/reef.es.min.js"
-
-////////////////////////////////
-// Constants
-
-// N/A
-
-////////////////////////////////
-// Variables
-
-let productList;
-let cart;
-let redirecting;
-
-////////////////////////////////
-// Event Handlers
+import { buildCartIcon } from "./modules/nav-bar.js";
+import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
 
 function handleRemoveItemFromCartIconClick(e)
 {
@@ -38,7 +19,7 @@ function handleRemoveItemFromCartIconClick(e)
 
     let productId = e.target.getAttribute("data-product-id");
 
-    let product = productList.get(productId);
+    let product = productList.find((product) => { return product.id == productId; });
     if(!product)
     {
         return;
@@ -94,8 +75,7 @@ async function handleCheckoutButtonClick(e)
     cart.items().forEach(
         function(productId)
         {
-            let product = productList.get(productId);
-
+            let product = productList.find((product) => { return product.id == productId; });
             if(!product)
             {
                 return;
@@ -156,102 +136,209 @@ function onClick(e)
     handleCheckoutButtonClick(e);
 }
 
-////////////////////////////////
-// Functions
 
-function generateCartListHtml()
+
+
+
+
+async function buildInitialAppState()
 {
-    let cartListHtml = `
-        <div class="cart-list">
-            <div class="label-bar">
-                <p class="product-name">Product</p>
-                <p class="product-price">Price</p>
-            </div>
-            <div class="items">
-    `;
+    let appState = {};
 
     //
-    // Check for an empty cart.
+    // Product List
+    //
+
+    appState.productList = await fetchProductList();
+
+    //
+    // Cart
+    //
+
+    appState.cart = Cart();
+    appState.cart.load();
+
+    //
+    // Redirecting Mutex
+    //
+
+    appState.redirecting = false;
+
+    return appState;
+}
+
+function generateCartListingTableHeaderHtml(appState)
+{
+    let {cart} = appState;
+
+    //
+    // Don't return the table header HTML if the cart is empty.
     //
 
     if(cart.items().length == 0)
     {
-        cartListHtml += `
-            <p>Your cart is empty.</p>
-        `;
-    }
-    else
-    {
-        cart.items().forEach(
-            function(productId)
-            {
-                let product = productList.get(productId);
-                if(!product)
-                {
-                    return;
-                }
-
-                let itemHtml = `
-                    <div class="item">
-                        <div class="product-detail">
-                            <a href="product.html?id=${product.id}">
-                                <img class="product-image" src="${product.url}" alt="${product.description}">
-                                <p class="product-name">${product.name}</p>
-                            </a>
-                        </div>
-                        <div class="order-detail">
-                            <p class="product-price">$${product.price}</p>
-                            <a class="action" data-action="remove-product" data-product-id="${product.id}">&#x2716</a>
-                        </div>
-                    </div>
-                `;
-
-                cartListHtml += itemHtml;
-            }
-        );
+        return "";
     }
 
-    cartListHtml += `
-            </div>
+    let html = `
+        <div class="cart-listing-table__label-bar">
+            <p class="cart-listing-table__label">Product</p>
+            <p class="cart-listing-table__label">Price</p>
         </div>
     `;
 
-    let checkoutTotal = 0;
+    return html;
+}
+
+function generateCartListingTableBodyHtml(appState)
+{
+    let {productList, cart} = appState;
+
+    //
+    // Return a message that the cart is empty if there are no products in the
+    // cart.
+    //
+
+    if(cart.items().length == 0)
+    {
+        return `
+            <p>Your cart is empty.</p>
+        `;
+    }
+
+    let html = ``;
 
     cart.items().forEach(
         function(productId)
         {
-            let product = productList.get(productId);
+            let product = productList.find((product) => { return product.id == productId; });
+            if(!product)
+            {
+                console.log("A product was removed from your cart because it could not be found.");
+                return;
+            }
+
+            let itemHtml = `
+                <div class="cart-listing-table-item">
+                    <a href="product.html?id=${product.id}">
+                        <img class="cart-listing-table-item__product-image" src="${product.url}" alt="${product.description}">
+                        <p class="cart-listing-table-item__product-name">${product.name}</p>
+                    </a>
+                    <div class="cart-listing-table-item__order-detail">
+                        <p class="cart-listing-table-item__product-price">$${product.price}</p>
+                        <a class="cart-listing-table-item__remove-item-action action" data-action="remove-product" data-product-id="${product.id}">&#x2716</a>
+                    </div>
+                </div>
+            `;
+
+            html += itemHtml;
+        }
+    );
+
+    return html;
+}
+
+function generateCartListingTableHtml(appState)
+{
+    let cartListingTableHeaderHtml = generateCartListingTableHeaderHtml(appState);
+
+    let cartListingTableBodyHtml = generateCartListingTableBodyHtml(appState);
+
+    let tableHtml = `
+        <div class="cart-listing-table">
+            ${cartListingTableHeaderHtml}
+            <div>
+                ${cartListingTableBodyHtml}
+            </div>
+        </div>
+    `;
+
+    return tableHtml;
+}
+
+function generateCartListingSummaryBar(appState)
+{
+    let {productList, cart} = appState;
+
+    //
+    // Don't return summary bar HTML if there are no products in the cart.
+    //
+
+    if(cart.items().length == 0)
+    {
+        return "";
+    }
+
+    //
+    // Calculate the cart total.
+    //
+
+    let cartTotal = 0;
+
+    cart.items().forEach(
+        function(productId)
+        {
+            let product = productList.find((product) => { return product.id == productId; });
             if(!product)
             {
                 return;
             }
 
-            checkoutTotal += product.price;
+            cartTotal += product.price;
         }
     );
 
-    cartListHtml += `
-        <div class="cart-total-bar">
-            <p class="label">Total:</p>
-            <p class="value">$${checkoutTotal}</p>
-            <p class="remove-product-action-spacer"></p>
+    let summaryBarHtml = `
+        <div class="cart-listing-summary-bar">
+            <p class="cart-listing-summary-bar__total-label">Total:</p>
+            <p class="cart-listing-summary-bar__total-value">$${cartTotal}</p>
+            <p class="cart-listing-summary-bar__remove-item-action-spacer"></p>
         </div>
     `;
 
-    if(cart.items().length != 0)
-    {
-        cartListHtml += `
-            <div class="checkout-bar">
-                <a class="button primary" data-action="checkout">Checkout</a>
-            </div>
-        `;
-    }
-
-    return cartListHtml;
+    return summaryBarHtml;
 }
 
-function buildCartList()
+function generateCartListingCheckoutBarHtml(appState)
+{
+    let {cart} = appState;
+
+    //
+    // Don't return checkout bar HTML if there are no products in the cart.
+    //
+
+    if(cart.items().length == 0)
+    {
+        return "";
+    }
+
+    let checkoutBarHtml = `
+        <div class="cart-listing-checkout-bar">
+            <a class="button primary" data-action="checkout">Checkout</a>
+        </div>
+    `;
+
+    return checkoutBarHtml;
+}
+
+function generateCartListingHtml(appState)
+{
+    let cartListingTableHtml = generateCartListingTableHtml(appState);
+
+    let cartListingSummaryBarHtml = generateCartListingSummaryBar(appState);
+
+    let cartListingCheckoutBarHtml = generateCartListingCheckoutBarHtml(appState);
+
+    let cartListingHtml = `
+        ${cartListingTableHtml}
+        ${cartListingSummaryBarHtml}
+        ${cartListingCheckoutBarHtml}
+    `;
+
+    return cartListingHtml;
+}
+
+function buildCartListing(appState)
 {
     let pageContentContainer = document.querySelector("[data-page-content]");
 
@@ -259,68 +346,42 @@ function buildCartList()
     // Ensure that products are available.
     //
 
-    if(productList.length() == 0)
+    let {productList} = appState;
+
+    if(productList.length == 0)
     {
         let message = "There are no photos available at this time. Please check back later.";
-        showMessage(message);
+        showPageContentErrorMessage(message);
         return;
-    } 
+    }
+
+    //
+    // Render the cart listing.
+    //
 
     component(
         pageContentContainer,
-        generateCartListHtml
+        () => { return generateCartListingHtml(appState); }
     );
 }
 
-function generateCartIconHtml()
+function setupEventListeners(appState)
 {
-    let productCount = cart.items().length;
-
-    let cartIconHtml = `
-        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-    `;
-
-    return cartIconHtml;
-}
-
-function buildCartIcon()
-{
-    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
-
-    component(
-        cartIconContainer,
-        () =>{ return generateCartIconHtml(); }
+    document.addEventListener(
+        "click",
+        (e) => { onClick(e, appState); }
     );
-}
-
-function mergeCanceledCheckoutItems()
-{
-    let productIds = parseUrlProductIds();
-    clearUrlProductIds();
-
-    productIds.forEach((id) => { cart.add(id); });
 }
 
 async function main()
 {
-    redirecting = false;
+    let appState = await buildInitialAppState();
 
-    productList = ProductList();
-    await productList.load();
+    buildCartIcon(appState.cart);
 
-    cart = Cart();
-    cart.load();
+    buildCartListing(appState);
 
-    mergeCanceledCheckoutItems();
-
-    buildCartList();
-
-    buildCartIcon();
+    //setupEventListeners(appState);
 }
 
-////////////////////////////////
-// Script Entry Point
-
 window.addEventListener("load", main);
-document.addEventListener("click", onClick);
-
