@@ -8,6 +8,27 @@
 }
 
 /*******************************
+* Error Message
+**/
+
+.error-message
+{
+    margin-top: 2em;
+    margin-bottom: 2em;
+    font-size: 16pt;
+    text-align: center;
+}
+
+/*******************************
+* Notification
+**/
+
+.notification
+{
+    margin-top: 1em;
+}
+
+/*******************************
 * Product Card
 **/
 
@@ -197,13 +218,7 @@
 
 /*
 
-.message
-{
-    margin-top: 2em;
-    margin-bottom: 2em;
-    font-size: 16pt;
-    text-align: center;
-}
+
 
 *******************************
 * Notifier

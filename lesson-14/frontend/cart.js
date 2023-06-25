@@ -1,34 +1,9 @@
-import { component } from "./vendors/reef/reef.es.min.js"
+import { render, component } from "./vendors/reef/reef.es.min.js"
 import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
 import { buildCartIcon } from "./modules/nav-bar.js";
 import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
-
-function handleRemoveItemFromCartIconClick(e)
-{
-    if(e.target.getAttribute("data-action") != "remove-product")
-    {
-        return;
-    }
-
-    if(redirecting)
-    {
-        showNotification("Redirecting to the payment processor. Cannot modify cart.");
-        return;
-    }
-
-    let productId = e.target.getAttribute("data-product-id");
-
-    let product = productList.find((product) => { return product.id == productId; });
-    if(!product)
-    {
-        return;
-    }
-
-    cart.remove(productId);
-
-    showNotification(`Removed '${product.name}' from the cart.`);
-}
+import { Notifier } from "./modules/notifier.js";
 
 async function handleCheckoutButtonClick(e)
 {
@@ -130,41 +105,30 @@ async function handleCheckoutButtonClick(e)
     window.location.href = url;
 }
 
-function onClick(e)
+
+
+
+
+async function initProductListAppState(appState)
 {
-    handleRemoveItemFromCartIconClick(e);
-    handleCheckoutButtonClick(e);
+    appState.productList = await fetchProductList();
 }
 
-
-
-
-
-
-async function buildInitialAppState()
+function initCartAppState(appState)
 {
-    let appState = {};
-
-    //
-    // Product List
-    //
-
-    appState.productList = await fetchProductList();
-
-    //
-    // Cart
-    //
-
     appState.cart = Cart();
     appState.cart.load();
+}
 
-    //
-    // Redirecting Mutex
-    //
+function initCheckoutMutexAppState(appState)
+{
+    appState.checkingOut = false;
+}
 
-    appState.redirecting = false;
-
-    return appState;
+function initCartNotiferAppState(appState)
+{
+    let cartNotificationContainer = document.querySelector("[data-notification-container='cart-notifications']");
+    appState.cartNotifier = Notifier(cartNotificationContainer);
 }
 
 function generateCartListingTableHeaderHtml(appState)
@@ -359,10 +323,53 @@ function buildCartListing(appState)
     // Render the cart listing.
     //
 
+    let cartListingHtml = generateCartListingHtml(appState);
+
+    render(pageContentContainer, cartListingHtml);
+
+    //
+    // Listen for data updates.
+    //
+
     component(
         pageContentContainer,
         () => { return generateCartListingHtml(appState); }
     );
+}
+
+function handleRemoveItemFromCartIconClick(e, appState)
+{
+    if(e.target.getAttribute("data-action") != "remove-product")
+    {
+        return;
+    }
+
+    if(appState.checkingOut)
+    {
+        appState.cartNotifier.notify("The cart cannot be modifed while you are redirecting to the payment processor.");
+
+        return;
+    }
+
+    let {cart, productList} = appState;
+
+    let productId = e.target.getAttribute("data-product-id");
+    cart.remove(productId);
+
+    let product = productList.find((product) => { return product.id == productId; });
+    if(!product)
+    {
+        appState.cartNotifier.notify("Removed a product from the cart.");
+        return;
+    }
+
+    appState.cartNotifier.notify(`Removed '${product.name}' from the cart.`);
+}
+
+function onClick(e, appState)
+{
+    handleRemoveItemFromCartIconClick(e, appState);
+    //handleCheckoutButtonClick(e, appState);
 }
 
 function setupEventListeners(appState)
@@ -375,13 +382,21 @@ function setupEventListeners(appState)
 
 async function main()
 {
-    let appState = await buildInitialAppState();
+    let appState = {};
+
+    await initProductListAppState(appState);
+
+    initCartAppState(appState);
+
+    initCheckoutMutexAppState(appState);
+
+    initCartNotiferAppState(appState);
 
     buildCartIcon(appState.cart);
 
     buildCartListing(appState);
 
-    //setupEventListeners(appState);
+    setupEventListeners(appState);
 }
 
 window.addEventListener("load", main);
