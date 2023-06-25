@@ -62,6 +62,8 @@ fn_parse_cli()
 
 fn_main()
 {
+    cd "${PROJECT_DIR_PATH}"
+
     rsync -ai frontend/ _frontend
 }
 
