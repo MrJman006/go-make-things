@@ -1,73 +1,211 @@
 #! /usr/bin/env bash
 
-echo "$@" | grep -Pq "(^|\s+)(-s|--help)(\s+|$)"
+THIS_SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-if [ $? -eq 0 ]
-then
-    echo "usage: deploy.sh"
-    exit 1
-fi
+THIS_SCRIPT_DIR_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
-#
-# Ensure there repo is up to date.
-#
+PROJECT_DIR_PATH="$(cd "${THIS_SCRIPT_DIR_PATH}/.." && pwd -P)"
 
-git status | grep -Pq "Changes not staged for commit"
-RESULT=$?
-if [ ${RESULT} -eq 0 ]
-then
-    echo "The repo has non-commited changes. Either discard them or stash them before attempting to deploy."
-    exit 1
-fi
+MANUAL_PAGE_TEMPLATE="$(cat <<'EOF'
+    MANUAL PAGE
+        @{SCRIPT_NAME}
 
-while read LESSON
-do
-    LESSON="$(basename "${LESSON}")"
+    USAGE
+        @{SCRIPT_NAME} [optons]
+
+    DESCRIPTION
+        Deploys live versions of all lessons to GitHub hosting.
+
+    OPTIONS
+        -h|--help
+            Show this manual page.
+
+    END
+EOF
+)"
+
+SHOW_HELP=""
+
+function print_manual_page()
+{
+    #
+    # Instantiate the template.
+    #
+
+    local TEMP_FILE="$(mktemp --tmpdir="/dev/shm" "XXXXXX-manual.txt")"
+
+    echo "${MANUAL_PAGE_TEMPLATE}" > "${TEMP_FILE}"
 
     #
-    # Stage the target directory.
+    # Remove leading spaces and fill in template fields.
     #
 
-    rsync -ai "${LESSON}" _stage
+    sed -ri "s/^\s{4}//" "${TEMP_FILE}"
+
+    sed -ri "s/@\{SCRIPT_NAME\}/${THIS_SCRIPT_NAME}/g" "${TEMP_FILE}"
 
     #
-    # Remove unnecessary files.
+    # Print to console.
+    #
+
+    cat "${TEMP_FILE}"
+
+    #
+    # Clean up.
+    #
+
+    rm "${TEMP_FILE}"
+}
+
+function parse_cli()
+{
+    #
+    # Parse options.
+    #
+
+    while [ 1 ]
+    do
+        case "${1}" in
+            -h|--help)
+                shift
+                SHOW_HELP="yes"
+                return 0
+                ;;
+            *)
+                if [ "${1:0:1}" == "-" ] && [ "${1}" != "--" ]
+                then
+                    echo "Invalid option '${1}'. Need --help?"
+                    return 1
+                fi
+
+                if [ "${1}" == "--" ]
+                then
+                    shift
+                fi
+
+                break
+                ;;
+        esac
+    done
+}
+
+function checkForCleanRepo()
+{
+    #
+    # Ensure there repo is up to date.
     #
     
-    rm "_stage/${LESSON}/README.md"
-    rm "_stage/${LESSON}/package.json"
+    git status | grep -Pq "Changes not staged for commit"
+    RESULT=$?
+
+    if [ ${RESULT} -eq 0 ]
+    then
+        echo "Error: The repo has non-commited changes. Either discard them or stash them before attempting to deploy."
+        return 1
+    fi
+}
+
+function stageLessonSites()
+{
+    local LESSON_PATH
+
+    while read LESSON_PATH
+    do
+        local LESSON_NAME="$(basename "${LESSON_PATH}")"
+    
+        #
+        # Stage the lesson site files.
+        #
+   
+        if [ -e "${LESSON_PATH}/frontend" ]
+        then
+            local CMD=("${LESSON_PATH}/scripts/build-frontend-site.sh")
+            "${CMD[@]}" || continue
+            rsync -ai "${LESSON_PATH}/_frontend/" "_stage/${LESSON_NAME}"
+        else
+            rsync -ai "${LESSON_PATH}" _stage
+        fi
+    
+        #
+        # Remove unnecessary files.
+        #
+
+        local FILE_LIST=() 
+
+        FILE_LIST+=("_stage/${LESSON_NAME}/README.md")      
+        FILE_LIST+=("_stage/${LESSON_NAME}/package.json")
+
+        local FILE
+        for FILE in "${FILE_LIST[@]}"
+        do
+            [ -e "${FILE}" ] && rm "${FILE}"
+        done
+
+        #
+        # Change localhost links.
+        #
+    
+        find "_stage/${LESSON_NAME}" -type f -exec sed -ri "s|http://127.0.0.1:9999|https://mrjman006.github.io/gmt-webapps-workshop/${LESSON_NAME}|g" {} \;
+    
+        #
+        # Add a link for the lesson site to the root index.
+        #
+    
+        echo "<a href=\"${LESSON_NAME}\">${LESSON_NAME}</a><br>" >> "_stage/index.html"
+    done < <(find . -maxdepth 1 -type d \( -not -path . \) | sort)
+}
+
+function deployStagedSites()
+{
+    #
+    # GitHub Pages are automatically deployed for files in a remote branch
+    # called 'gh-pages'. So we need to add just the staged site files to the
+    # named branch and GitHub will take care of the rest.
 
     #
-    # Change localhost links.
+    # Commit the staging directory so we can add the staged files to the
+    # 'gh-pages' remote branch. Save the previous HEAD state so we can remove
+    # the staging commit from the history when we are done.
+    #
+    
+    local ORIGINAL_HEAD="$(git rev-parse --short HEAD)"
+    git add --force _stage
+    git commit -m "Deploying staged lesson sites." 
+  
+    # 
+    # Remove old versions of the 'gh-pages' remote branch. 
     #
 
-    find "_stage/${LESSON}" -type f -exec sed -ri "s|http://127.0.0.1:9999|https://mrjman006.github.io/gmt-webapps-workshop/${LESSON}|g" {} \;
+    git push -d origin gh-pages
 
     #
-    # Add a link for the lesson site to the root index.
+    # Push just the contents of the staging directory to the 'gh-pages' remote
+    # branch.
     #
 
-    echo "<a href=\"${LESSON}\">${LESSON}</a><br>" >> "_stage/index.html"
-done < <(find . -maxdepth 1 -type d \( -not -path . \) | sort)
+    git subtree push --prefix _stage origin gh-pages
+    
+    #
+    # Now that the staged files are deployed, we can restore the git repo
+    # to it's original state.
+    #
+    
+    git reset --hard "${ORIGINAL_HEAD}"
+}
 
-#
-# Add the staging dir to the repo.
-#
+function main()
+{
+    if [ "${SHOW_HELP}" == "yes" ]
+    then
+        show_manual_page
+        return 0
+    fi
 
-ORIGINAL_HEAD="$(git rev-parse --short HEAD)"
-git add --force _stage
-git commit -m "Deploying staged lesson sites."
+    checkForCleanRepo || return $?
 
-#
-# Push the contents of the staging dir to the 'gh-pages' remote branch.
-#
+    stageLessonSites || return $?
+   
+    deployStagedSites || return $?
+}
 
-git push -d origin gh-pages
-git subtree push --prefix _stage origin gh-pages
-
-#
-# Restore the git repo to it's original state.
-#
-
-git reset --hard "${ORIGINAL_HEAD}"
-
+parse_cli "$@" && main
