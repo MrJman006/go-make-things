@@ -1,7 +1,0 @@
-:root
-{
-    --color-black: black;
-    --color-red: red;
-    --error-color: var(--color-red);
-    --font-color-default: var(--color-black);
-}
