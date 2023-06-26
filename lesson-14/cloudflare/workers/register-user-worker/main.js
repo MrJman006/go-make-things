@@ -84,7 +84,7 @@ async function handlePUT(request)
     // Ensure the user does not already exist.
     //
 
-    let user = await GMTWW_USERS.get(username);
+    let user = await USERS.get(username);
 
     if(user)
     {
@@ -105,9 +105,9 @@ async function handlePUT(request)
 
     let hash = bcrypt.hashSync(password);
 
-    await GMTWW_USERS.put(username, hash);
+    await USERS.put(username, hash);
 
-    user = await GMTWW_USERS.get(username);
+    user = await USERS.get(username);
 
     if(!user)
     {

@@ -1,8 +1,0 @@
-name = "gmtwwl14-register-user"
-main = "main.js"
-compatibility_date = "2023-05-18"
-
-[[kv_namespaces]]
-binding = "GMTWW_USERS"
-id = "acc167cec159403bbec7077851aafc5b"
-preview_id = "acc167cec159403bbec7077851aafc5b"

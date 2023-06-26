@@ -5,7 +5,7 @@
 #
 # KV Name: gmtww_storage
 # KV Binding: STORAGE
-# KV Description: This KV is used to hold data for the API.
+# KV Description: This KV is used to hold general data used by the app.
 ####
 
 ####

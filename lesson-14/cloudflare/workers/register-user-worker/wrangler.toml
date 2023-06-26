@@ -3,11 +3,13 @@
 #
 # This worker relies on the following KV namespaces.
 #
-# KV Name: gmtww_storage
-# KV Binding: STORAGE
-# KV Description: This KV is used to hold general data used by the app.
+# KV Name: gmtww_users
+# KV Binding: USERS
+# KV Description: This KV is used to hold the list of registered users.
 ####
 
-name = "gmtww-api-product-list"
+
+
+name = "gmtww-api-register-user"
 main = "main.js"
 compatibility_date = "2023-05-18"
