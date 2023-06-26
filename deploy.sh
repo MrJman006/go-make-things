@@ -110,14 +110,6 @@ function stageLessonSites()
     mkdir -p _stage
 
     #
-    # Add a link for the latest lesson site to the root index.
-    #
-
-    LATEST_LESSON="$(find . -maxdepth 1 -name "lesson-*" | sort | tail -n 1 | xargs basename)"
-
-    echo "<a href=\"${LATEST_LESSON}\">latest</a><br>" >> "_stage/index.html"
-
-    #
     # Process each lesson.
     #
 
@@ -167,6 +159,49 @@ function stageLessonSites()
     
         echo "<a href=\"${LESSON_NAME}\">${LESSON_NAME}</a><br>" >> "_stage/index.html"
     done < <(find . -maxdepth 1 -name "lesson-*" | sort)
+}
+
+function stageLatestLessonSite()
+{
+    local LATEST_LESSON_PATH="$(find . -maxdepth 1 -name "lesson-*" | sort | tail -n 1)"
+ 
+    #
+    # Stage the lesson site files.
+    #
+   
+    if [ -e "${LATEST_LESSON_PATH}/frontend" ]
+    then
+        rsync -ai "${LATEST_LESSON_PATH}/_frontend/" _stage/latest
+    else
+        rsync -ai "${LATEST_LESSON_PATH}/" _stage/latest
+    fi
+
+    #
+    # Remove unnecessary files.
+    #
+
+    local FILE_LIST=()
+
+    FILE_LIST+=("_stage/latest/README.md")
+    FILE_LIST+=("_stage/latest/package.json")
+
+    local FILE
+    for FILE in "${FILE_LIST[@]}"
+    do
+        [ -e "${FILE}" ] && rm "${FILE}"
+    done
+
+    #
+    # Change localhost links.
+    #
+    
+    find "_stage/latest" -type f -exec sed -ri "s|http://127.0.0.1:9999|https://mrjman006.github.io/gmt-webapps-workshop/latest|g" {} \;
+    
+    #
+    # Add a link for the lesson site to the root index.
+    #
+    
+    echo "<a href=\"latest\">latest</a><br>" >> "_stage/index.html"
 }
 
 function deployStagedSites()
@@ -219,6 +254,8 @@ function main()
 
     stageLessonSites || return $?
    
+    stageLatestLessonSite || return $?
+
     deployStagedSites || return $?
 }
 
