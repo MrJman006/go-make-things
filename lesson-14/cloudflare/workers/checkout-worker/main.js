@@ -167,7 +167,7 @@ async function handlePOST(request)
     // Get the product list.
     //
 
-    let productListJson = await GMTWW_STORAGE.get("products")
+    let productListJson = await STORAGE.get("productList")
     let productList = JSON.parse(productListJson);
 
     //

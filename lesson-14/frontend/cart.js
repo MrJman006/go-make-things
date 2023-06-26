@@ -4,110 +4,7 @@ import { Cart } from "./modules/cart.js";
 import { buildCartIcon } from "./modules/nav-bar.js";
 import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
 import { Notifier } from "./modules/notifier.js";
-
-async function handleCheckoutButtonClick(e)
-{
-    if(e.target.getAttribute("data-action") != "checkout")
-    {
-        return;
-    }
-
-    if(redirecting)
-    {
-        showNotification("A redirect to the payment processor is already in progress.");
-        return;
-    }
-
-    let CHECKOUT_ENDPOINT = "https://gmtww-stripe.cfjcd.workers.dev";
-
-    //
-    // Build the request object.
-    //
-
-    let requestObject = {};
-
-    // Method.
-    requestObject.method = "POST";
-
-    // Headers.
-    requestObject.headers = {};
-    requestObject.headers["Content-type"] = "application/json";
-
-    // Body.
-    let requestBodyData = {};
-    requestBodyData.currency = "usd";
-
-    let success_url = new URL("http://127.0.0.1:9999/success.html");
-    success_url.searchParams.set("productIds", cart.items());
-    requestBodyData.success_url = success_url.toString();
-   
-    let cancel_url = new URL("http://127.0.0.1:9999/cart.html");
-    cancel_url.searchParams.set("productIds", cart.items());
-    requestBodyData.cancel_url = cancel_url.toString();
-
-    let cart_items = [];
-
-    cart.items().forEach(
-        function(productId)
-        {
-            let product = productList.find((product) => { return product.id == productId; });
-            if(!product)
-            {
-                return;
-            }
-
-            let cart_item = {};
-            cart_item.product_id = product.id;
-            cart_item.quantity = 1;
-
-            cart_items.push(cart_item);
-        }
-    );
-
-    requestBodyData.cart_items = cart_items;
-    requestObject.body = JSON.stringify(requestBodyData);
-
-    //
-    // Call the middleman API
-    //
-
-    redirecting = true;
-    showNotification(`Redirecting to payment processor...`);
-
-    let url;
-
-    try
-    {
-        let response = await fetch(
-            CHECKOUT_ENDPOINT,
-            requestObject
-        );
-
-        if(!response.ok)
-        {
-            throw response;
-        }
-
-        // Get the response
-        let data = await response.json();
-        url = data.url;
-    }
-    catch(e)
-    {
-        showNotification(`Failed to redirect to the payment processor. Please notify the site administrator.`);
-        redirecting = false;
-        return;
-    }
-
-    // Redirect to the payment page.
-    cart.removeAll();
-    history.replaceState(history.state, null, cancel_url.toString());
-    window.location.href = url;
-}
-
-
-
-
+import { timedFetch } from "./modules/fetch.js";
 
 async function initProductListAppState(appState)
 {
@@ -366,10 +263,130 @@ function handleRemoveItemFromCartIconClick(e, appState)
     appState.cartNotifier.notify(`Removed '${product.name}' from the cart.`);
 }
 
+function buildCheckoutRequest(appState)
+{
+    let request = {};
+
+    let {cart, productList} = appState;
+
+    //
+    // Method.
+    //
+
+    request.method = "POST";
+
+    //
+    // Headers.
+    //
+
+    request.headers = {};
+    request.headers["Content-type"] = "application/json";
+
+    //
+    // Body.
+    //
+
+    let data = {};
+
+    data.currency = "usd";
+
+    let successUrl = new URL("http://127.0.0.1:9999/success.html");
+    successUrl.searchParams.set("purchasedItems", appState.cart.items());
+    data.successUrl = successUrl.toString();
+   
+    let cancelUrl = new URL("http://127.0.0.1:9999/cart.html");
+    cancelUrl.searchParams.set("cartItems", cart.items());
+    data.cancelUrl = cancelUrl.toString();
+
+    let cartItems = [];
+
+    cart.items().forEach(
+        function(productId)
+        {
+            let product = productList.find((product) => { return product.id == productId; });
+            if(!product)
+            {
+                return;
+            }
+
+            let cartItem = {};
+            cartItem.productId = product.id;
+            cartItem.quantity = 1;
+
+            cartItems.push(cartItem);
+        }
+    );
+
+    data.cartItems = cartItems;
+    request.body = JSON.stringify(data);
+
+    return request;
+}
+
+async function handleCheckoutButtonClick(e, appState)
+{
+    if(e.target.getAttribute("data-action") != "checkout")
+    {
+        return;
+    }
+
+    if(appState.checkingOut)
+    {
+        appState.cartNotifier.notify("Redirecting to the payment processor.");
+        return;
+    }
+
+    //
+    // Request to checkout.
+    //
+
+    let CHECKOUT_ENDPOINT = "https://gmtww-api-checkout.cfjcd.workers.dev";
+
+    let request = buildCheckoutRequest(appState);
+
+    appState.cartNotifier.notify("Redirecting to the payment processor.");
+
+    appState.checkingOut = true;
+
+    let paymentProcessorLink;
+
+    try
+    {
+        let response = await timedFetch(
+            CHECKOUT_ENDPOINT,
+            request
+        );
+
+        if(!response.ok)
+        {
+            let message = await response.text();
+            throw new Error(message);
+        }
+
+        let data = await response.json();
+        paymentProcessorLink = data.url;
+    }
+    catch(e)
+    {
+        console.error(e);
+        appState.cartNotifier.notify("Failed to redirect to the payment processor. Please try again or notify the site administrator.");
+        appState.checkingOut = false;
+        return;
+    }
+
+    //
+    // Redirect to the payment page.
+    //
+
+    let {cart} = appState;
+    cart.removeAll();
+    window.location.href = paymentProcessorLink;
+}
+
 function onClick(e, appState)
 {
     handleRemoveItemFromCartIconClick(e, appState);
-    //handleCheckoutButtonClick(e, appState);
+    handleCheckoutButtonClick(e, appState);
 }
 
 function setupEventListeners(appState)

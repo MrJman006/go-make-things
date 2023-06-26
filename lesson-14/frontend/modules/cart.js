@@ -56,6 +56,12 @@ function Cart()
 
             url.searchParams.delete("cartItems");
             history.replaceState(history.state, null, url.toString());
+
+            //
+            // Save the cart state to cache URL items.
+            //
+
+            storage.site.setItem(_CACHE_ID, _cart);
         }
     }
     

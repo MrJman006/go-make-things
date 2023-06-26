@@ -35,7 +35,7 @@ WORKER_BUILD_DIR=""
 WORKER_BUILD_DIR=""
 WORKER_CONFIG_FILE_PATH=""
 
-function print_manual_page()
+function show_manual_page()
 {
     #
     # Instantiate the template.
@@ -248,11 +248,11 @@ function deployWorkerSecrets()
     # directory.
     #
 
-    local SECRET_VARS_JSON_PATH="${WORKER_BUILD_DIR_PATH}/secret-vars.json"
+    local SECRET_VARS_JSON_PATH="${WORKER_BUILD_DIR_PATH}/secret-variables.json"
 
     if [ ! -e "${SECRET_VARS_JSON_PATH}" ]
     then
-        echo "ERROR: This worker relies on secret variables and no secret variable config file was found in the build directory. You must create a secret variables config file in the build directory of the worker and re-run this script. The config file must be named 'secret-vars.json' and contain a json object that maps a single key value pair for each required secret variable. See the worker's 'wrangler.toml' for a list of required secret variables."
+        echo "ERROR: This worker relies on secret variables and no secret variable config file was found in the build directory. You must create a secret variables config file in the build directory of the worker and re-run this script. The config file must be named 'secret-variables.json' and contain a json object that maps a single key value pair for each required secret variable. See the worker's 'wrangler.toml' for a list of required secret variables."
         return 1
     fi
 
