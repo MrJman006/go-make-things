@@ -1,0 +1,53 @@
+/*******************************
+* Navigation
+**/
+
+.nav
+{
+    padding: 1em 0;
+}
+
+.nav a
+{
+    text-decoration: none;
+}
+
+.nav a:focus,
+.nav a:hover
+{
+    text-decoration: underline;
+}
+
+/*******************************
+* Gallery
+**/
+
+@media (min-width: 20em)
+{
+    .gallery
+    {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: 1fr;
+        grid-column-gap: 2em;
+        grid-row-gap: 2em;
+    }
+}
+
+@media (min-width: 32em)
+{
+    .gallery
+    {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 42em)
+{
+    .gallery
+    {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+

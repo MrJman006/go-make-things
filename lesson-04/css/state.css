@@ -1,0 +1,10 @@
+.hidden
+{
+    display: none;
+}
+
+.button:hover
+{
+    background-color: #004182;
+}
+

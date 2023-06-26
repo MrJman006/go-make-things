@@ -1,0 +1,55 @@
+body
+{
+    margin: 0 auto;
+    max-width: 50em;
+    width: 88%;
+}
+
+img
+{
+    display: block;
+    height: auto;
+    max-width: 100%;
+}
+
+footer
+{
+    border-top: 1px solid #e5e5e5;
+    margin-top: 5em;
+}
+
+a.action
+{
+    font-size: 12pt;
+    display: inline-block;
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
+}
+
+button,
+input[type=submit],
+a.button
+{
+    font-size: 12pt;
+    border: none;
+    display: inline-block;
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
+    padding: 0.5em 1em;
+}
+
+button.primary,
+input[type="submit"].primary,
+a.button.primary
+{
+    background-color: #015db9;
+    color: #ffffff;
+}
+
+a
+{
+    text-decoration: none;
+}
+

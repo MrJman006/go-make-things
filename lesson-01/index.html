@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Sparrow Photography</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <style>
+            *
+            {
+                font-family: arial;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body
+            {
+                margin: 0 auto;
+                max-width: 50em;
+                width: 88%;
+            }
+
+            /**
+             * Grid Layout
+             */
+
+            @media (min-width: 20em)
+            {
+                #photos
+                {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    grid-template-rows: 1fr;
+                    grid-column-gap: 2em;
+                    grid-row-gap: 2em;
+                }
+            }
+
+            @media (min-width: 32em)
+            {
+                #photos
+                {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+
+            @media (min-width: 42em)
+            {
+                #photos
+                {
+                    grid-template-columns: repeat(4, 1fr);
+                }
+            }
+
+            /**
+             * Nav Menu
+             */
+            .nav
+            {
+                padding: 1em 0;
+            }
+
+            .nav a
+            {
+                text-decoration: none;
+            }
+
+            .nav a:focus,
+            .nav a:hover
+            {
+                text-decoration: underline;
+            }
+
+            /**
+             * Footer
+             */
+
+            footer
+            {
+                border-top: 1px solid #e5e5e5;
+                margin-top: 5em;
+            }
+
+            /**
+             * Responsive images
+             */
+
+            img
+            {
+                display: block;
+                height: auto;
+                max-width: 100%;
+            }
+
+            #app
+            {
+                margin-top: 1em;
+            }
+
+            .photo .heading
+            {
+                font-size: 1.25em;
+                text-align: center;
+            }
+
+            .photo .price
+            {
+                margin-top: 0.25em;
+                text-align: center;
+            }
+
+            .hidden
+            {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+
+        <nav class="nav">
+            <a class="logo" href="index.html"><strong>Sparrow Photography</strong></a>
+        </nav>
+
+        <h1>Sparrow Photography</h1>
+
+        <div id="app">Loading...</div>
+
+        <footer>
+            <p><em>Photos by Jack Sparrow. All rights reserved.</em></p>
+        </footer>
+
+        <script>
+
+            ////////////////////////////////
+            // Constants
+
+            let SHOP_ITEMS_ENDPOINT = "https://vanillajsacademy.com/api/photos.json";
+
+            ////////////////////////////////
+            // Variables
+
+            let photos = [];
+
+            ////////////////////////////////
+            // Functions
+
+            function buildPageSkeleton()
+            {
+                let app = document.querySelector("#app");
+                app.innerHTML = `
+                    <p class="hidden" data-notifier></p>
+                    <div id="photos"></div>
+                `;
+            }
+
+            function rebuildProductGrid()
+            {
+                let photoGallery = document.querySelector("#photos");
+                photoGallery.replaceChildren();
+
+                photos.forEach(
+                    function(photo)
+                    {
+                        let photoItem = `
+                            <div class="photo">
+                                <img src="${photo.url}" alt="${photo.description}">
+                                <div>
+                                    <p class="heading">${photo.name}</p>
+                                    <p class="price">$${photo.price}</p>
+                                </div>
+                            </div>
+                        `;
+                        photoGallery.innerHTML += photoItem;
+                    }
+                );
+            }
+
+            async function fetchAvailableProducts()
+            {
+                let result = await fetch(SHOP_ITEMS_ENDPOINT);
+                if(!result.ok)
+                {
+                    let notifier = document.querySelector("[data-notifier]");
+                    notifier.textContent = "Unable to reach the server. Please notify the site adminitrator.";
+                    notifier.classList.remove("hidden");
+                    return;
+                }
+
+                let data = await result.json();
+                photos = data;
+            }
+
+            function cleanupUrl()
+            {
+                if(!window.history.replaceState)
+                {
+                    return;
+                }
+
+                let regex = new RegExp("/index.html$");
+                let cleanUrl = window.location.href.replace(regex, "/")
+                window.history.replaceState(null, null, cleanUrl);
+            }
+
+            async function main()
+            {
+                cleanupUrl();
+                buildPageSkeleton();
+                await fetchAvailableProducts();
+                rebuildProductGrid();
+            }
+
+            ////////////////////////////////
+            // Script Entry Point
+
+            window.addEventListener(
+                "load",
+                e => { main(); }
+            );
+        </script>
+    </body>
+</html>
