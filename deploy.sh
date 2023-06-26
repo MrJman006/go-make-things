@@ -107,6 +107,20 @@ function checkForCleanRepo()
 
 function stageLessonSites()
 {
+    mkdir -p _stage
+
+    #
+    # Add a link for the latest lesson site to the root index.
+    #
+
+    LATEST_LESSON="$(find . -maxdepth 1 -name "lesson-*" | sort | tail -n 1 | xargs basename)"
+
+    echo "<a href=\"${LATEST_LESSON}\">latest</a><br>" >> "_stage/index.html"
+
+    #
+    # Process each lesson.
+    #
+
     local LESSON_PATH
 
     while read LESSON_PATH
@@ -152,7 +166,7 @@ function stageLessonSites()
         #
     
         echo "<a href=\"${LESSON_NAME}\">${LESSON_NAME}</a><br>" >> "_stage/index.html"
-    done < <(find . -maxdepth 1 -type d \( -not -path . \) | sort)
+    done < <(find . -maxdepth 1 -name "lesson-*" | sort)
 }
 
 function deployStagedSites()

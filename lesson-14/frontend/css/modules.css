@@ -8,13 +8,12 @@
 }
 
 /*******************************
-* Error Message
+* Messages
 **/
 
+.message,
 .error-message
 {
-    margin-top: 2em;
-    margin-bottom: 2em;
     font-size: 16pt;
     text-align: center;
 }
@@ -102,6 +101,7 @@
     justify-content: space-between;
     font-weight: bold;
     padding-bottom: 0.5em;
+    margin-top: 2em;
     margin-bottom: 1em;
     border-bottom: 1px solid #e5e5e5;
 }

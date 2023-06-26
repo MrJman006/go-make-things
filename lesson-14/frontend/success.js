@@ -122,6 +122,8 @@ function generateCheckoutSummaryListingHtml(purchasedProductList, appState)
     let checkoutSummaryListingSummaryBarHtml = generateCheckoutSummaryListingSummaryBar(purchasedProductList, appState);
 
     let checkoutSummaryListingHtml = `
+        <h2 class="message">Thank you for shopping with us!</h2>
+        <p class="message">Below is a summary of your purchase.</p>
         ${checkoutSummaryListingTableHtml}
         ${checkoutSummaryListingSummaryBarHtml}
     `;
