@@ -2,7 +2,7 @@ import { render, component } from "./vendors/reef/reef.es.min.js"
 import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
 import { buildCartIcon } from "./modules/nav-bar.js";
-import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
+import { showPageContentErrorMessage } from "./modules/errors.js";
 import { Notifier } from "./modules/notifier.js";
 import { timedFetch } from "./modules/fetch.js";
 

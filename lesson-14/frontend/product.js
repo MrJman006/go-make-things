@@ -2,7 +2,7 @@ import { store, component } from "./vendors/reef/reef.es.min.js"
 import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
 import { buildCartIcon } from "./modules/nav-bar.js";
-import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirect } from "./modules/errors.js";
+import { showPageContentErrorMessage, showPageContentErrorMessageAndRedirectHome } from "./modules/errors.js";
 
 async function buildInitialAppState()
 {
@@ -95,7 +95,7 @@ function buildProductListing(appState)
     if(!productId || productId == "")
     {
         let message = "The requested product could not be located.";
-        showPageContentErrorMessageAndRedirect(message);
+        showPageContentErrorMessageAndRedirectHome(message);
         return;
     }
 
@@ -113,7 +113,7 @@ function buildProductListing(appState)
     if(!product)
     {
         let message = "The requested product could not be located.";
-        showPageContentErrorMessageAndRedirect(message);
+        showPageContentErrorMessageAndRedirectHome(message);
         return;
     }
 

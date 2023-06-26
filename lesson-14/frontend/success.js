@@ -1,76 +1,100 @@
-////////////////////////////////
-// Imports
-
-import { ProductList } from "./modules/product-list.js";
+import { render } from "./vendors/reef/reef.es.min.js"
+import { fetchProductList } from "./modules/product-list.js";
 import { Cart } from "./modules/cart.js";
-import { parseUrlProductIds } from "./modules/utils.js";
-import { render, component } from "./vendors/reef/reef.es.min.js"
+import { buildCartIcon } from "./modules/nav-bar.js";
+import { showPageContentErrorMessageAndRedirectHome } from "./modules/errors.js";
 
-////////////////////////////////
-// Constants
-
-// N/A
-
-////////////////////////////////
-// Variables
-
-let cart;
-let productList;
-let productIds;
-
-////////////////////////////////
-// Functions
-
-function generateCheckoutSummaryTableHtml(purchasedProductIds)
+async function initProductListAppState(appState)
 {
-    let checkoutSummaryTableHtml = `
-        <p class="message">Thank you for shopping with us! Below is a summary of your purchase.</p>
-        <div class="cart-list">
-            <div class="label-bar">
-                <p class="product-name">Product</p>
-                <p class="product-price">Price</p>
-            </div>
-            <div class="items">
+    appState.productList = await fetchProductList();
+}
+
+function initCartAppState(appState)
+{
+    appState.cart = Cart();
+    appState.cart.load();
+}
+
+function generateCheckoutSummaryListingTableHeaderHtml(purchasedProductList)
+{
+    let html = `
+        <div class="cart-listing-table__label-bar">
+            <p class="cart-listing-table__label">Product</p>
+            <p class="cart-listing-table__label">Price</p>
+        </div>
     `;
 
-    purchasedProductIds.forEach(
+    return html;
+}
+
+function generateCheckoutSummaryListingTableBodyHtml(purchasedProductList, appState)
+{
+    let {productList} = appState;
+
+    let html = ``;
+
+    purchasedProductList.forEach(
         function(productId)
         {
-            let product = productList.get(productId);
+            let product = productList.find((product) => { return product.id == productId; });
             if(!product)
             {
+                console.log("A product was removed from the summary because it could not be found.");
                 return;
             }
 
-            let itemTemplate = `
-                <div class="item">
-                    <div class="product-detail">
-                        <a href="product.html?id=${product.id}">
-                            <img class="product-image" src="${product.url}" alt="${product.description}">
-                            <p class="product-name">${product.name}</p>
-                        </a>
-                    </div>
-                    <div class="order-detail">
-                        <p class="product-price">$${product.price}</p>
+            let itemHtml = `
+                <div class="cart-listing-table-item">
+                    <a href="product.html?id=${product.id}">
+                        <img class="cart-listing-table-item__product-image" src="${product.url}" alt="${product.description}">
+                        <p class="cart-listing-table-item__product-name">${product.name}</p>
+                    </a>
+                    <div class="cart-listing-table-item__order-detail">
+                        <p class="cart-listing-table-item__product-price">$${product.price}</p>
+                        <p class="cart-listing-table-item__remove-item-action-spacer"></p>
                     </div>
                 </div>
             `;
 
-            checkoutSummaryTableHtml += itemTemplate;
+            html += itemHtml;
         }
     );
 
-    checkoutSummaryTableHtml += `
+    return html;
+}
+
+function generateCheckoutSummaryListingTableHtml(purchasedProductList, appState)
+{
+    let tableHeaderHtml = generateCheckoutSummaryListingTableHeaderHtml(purchasedProductList);
+
+    let tableBodyHtml = generateCheckoutSummaryListingTableBodyHtml(purchasedProductList, appState);
+
+    let tableHtml = `
+        <div class="cart-listing-table">
+            ${tableHeaderHtml}
+            <div>
+                ${tableBodyHtml}
             </div>
         </div>
     `;
 
+    return tableHtml;
+}
+
+function generateCheckoutSummaryListingSummaryBar(purchasedProductList, appState)
+{
+    let {productList} = appState;
+
+    //
+    // Calculate the checkout total.
+    //
+
     let checkoutTotal = 0;
 
-    purchasedProductIds.forEach(
+    purchasedProductList.forEach(
         function(productId)
         {
-            let product = productList.get(productId);
+            let product = productList.find((product) => { return product.id == productId; });
             if(!product)
             {
                 return;
@@ -80,68 +104,89 @@ function generateCheckoutSummaryTableHtml(purchasedProductIds)
         }
     );
 
-    checkoutSummaryTableHtml += `
-        <div class="cart-total-bar">
-            <p class="label">Total:</p>
-            <p class="value">$${checkoutTotal}</p>
+    let summaryBarHtml = `
+        <div class="cart-listing-summary-bar">
+            <p class="cart-listing-summary-bar__total-label">Total:</p>
+            <p class="cart-listing-summary-bar__total-value">$${checkoutTotal}</p>
+            <p class="cart-listing-summary-bar__remove-item-action-spacer"></p>
         </div>
     `;
 
-    return checkoutSummaryTableHtml;
+    return summaryBarHtml;
 }
 
-function buildCheckoutSummaryTable()
+function generateCheckoutSummaryListingHtml(purchasedProductList, appState)
+{
+    let checkoutSummaryListingTableHtml = generateCheckoutSummaryListingTableHtml(purchasedProductList, appState);
+
+    let checkoutSummaryListingSummaryBarHtml = generateCheckoutSummaryListingSummaryBar(purchasedProductList, appState);
+
+    let checkoutSummaryListingHtml = `
+        ${checkoutSummaryListingTableHtml}
+        ${checkoutSummaryListingSummaryBarHtml}
+    `;
+
+    return checkoutSummaryListingHtml;
+}
+
+function buildCheckoutSummaryListing(appState)
 {
     let pageContentContainer = document.querySelector("[data-page-content]");
 
-    // Redirect if the URL is invalid.
-    let purchasedProductIds = parseUrlProductIds();
-    if(purchasedProductIds.length == 0)
+    //
+    // Ensure that products are available.
+    //
+
+    let {productList} = appState;
+
+    if(productList.length == 0)
     {
-        console.log("invalid url.");
-        location.replace("index.html");
+        let message = "We encounted an error when generating your checkout summary. A copy should be in your email. We apologize for the inconvenience.";
+
+        showPageContentErrorMessageAndRedirectHome(message);
+
         return;
     }
 
-    render(pageContentContainer, generateCheckoutSummaryTableHtml(purchasedProductIds));
-}
+    //
+    // Get the product list from the URL.
+    //
 
-function generateCartIconHtml()
-{
-    let productCount = cart.items().length;
+    let url = new URL(window.location.href);
+    let param = url.searchParams.get("purchasedItems");
 
-    let cartIconHtml = `
-        <span aria-hidden="true">&#x1f6d2;</span> Cart <span>${productCount}</span>
-    `;
+    let purchasedProductIds;
 
-    return cartIconHtml;
-}
+    if(param)
+    {
+        purchasedProductIds = param.split(",");
+    }
 
-function buildCartIcon()
-{
-    let cartIconContainer = document.querySelector("[data-cart-icon-container]");
+    if(purchasedProductIds && purchasedProductIds.length == 0)
+    {
+        let message = "We encounted an error when generating your checkout summary. A copy should be in your email. We apologize for the inconvenience.";
 
-    component(
-        cartIconContainer,
-        () =>{ return generateCartIconHtml(); }
-    );
+        showPageContentErrorMessageAndRedirectHome(message);
+
+        return;
+    }
+
+    let checkoutSummaryListingHtml = generateCheckoutSummaryListingHtml(purchasedProductIds, appState);
+
+    render(pageContentContainer, checkoutSummaryListingHtml);
 }
 
 async function main()
 {
-    productList = ProductList();
-    await productList.load();
+    let appState = {};
 
-    cart = Cart();
-    cart.load();
+    await initProductListAppState(appState);
 
-    buildCheckoutSummaryTable();
+    initCartAppState(appState);
 
-    buildCartIcon();
+    buildCartIcon(appState.cart);
+
+    buildCheckoutSummaryListing(appState);
 }
 
-////////////////////////////////
-// Script Entry Point
-
 window.addEventListener("load", main);
-

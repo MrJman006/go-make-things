@@ -119,6 +119,7 @@
 .cart-listing-table__label:last-child
 {
     padding-right: 2em;
+    text-align: right;
 }
 
 .cart-listing-table-item
@@ -197,6 +198,7 @@
     text-align: right;
 }
 
+.cart-listing-table-item__remove-item-action-spacer,
 .cart-listing-summary-bar__remove-item-action-spacer
 {
     margin-right: 2em;

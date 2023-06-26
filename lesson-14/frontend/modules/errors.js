@@ -9,19 +9,20 @@ function showPageContentErrorMessage(message)
     render(container, html);
 }
 
-function showPageContentErrorMessageAndRedirect(message, options = {})
+function showPageContentErrorMessageAndRedirectHome(message, options = {})
 {
+    let REDIRECT_TARGET = "index.html";
+
     let opts = Object.assign(
         {
-            redirectDelay: 5,
-            redirectTarget: "index.html"
+            redirectDelay: 5
         },
         options
     );
 
     let container = document.querySelector("[data-page-content]");
 
-    let {redirectDelay, redirectTarget} = opts;
+    let {redirectDelay} = opts;
 
     function update()
     {
@@ -39,7 +40,7 @@ function showPageContentErrorMessageAndRedirect(message, options = {})
 
         if(redirectDelay == 0 )
         {
-            location.replace(redirectTarget);
+            location.replace(REDIRECT_TARGET);
             return;
         }
 
@@ -58,6 +59,5 @@ function showPageContentErrorMessageAndRedirect(message, options = {})
 
 export {
     showPageContentErrorMessage,
-    showPageContentErrorMessageAndRedirect
+    showPageContentErrorMessageAndRedirectHome
 };
-
